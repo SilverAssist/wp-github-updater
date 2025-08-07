@@ -1,0 +1,26 @@
+# Composer package files
+/vendor/
+composer.lock
+
+# PHPUnit
+/phpunit.xml
+/.phpunit.result.cache
+
+# Code coverage
+/coverage/
+
+# IDE files
+/.vscode/
+/.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Cache files
+.phpcs-cache

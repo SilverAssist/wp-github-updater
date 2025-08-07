@@ -1,0 +1,9 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - tests
+    ignoreErrors:
+        # WordPress functions are not available during static analysis
+        - '#Call to unknown function: [\\]?[a-zA-Z_]+#'
