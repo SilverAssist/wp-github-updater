@@ -10,14 +10,14 @@ class UpdaterConfigTest extends TestCase
     public function testBasicConfiguration()
     {
         $config = new UpdaterConfig('/path/to/plugin.php', 'owner/repo');
-        
+
         $this->assertEquals('/path/to/plugin.php', $config->pluginFile);
         $this->assertEquals('owner/repo', $config->githubRepo);
         $this->assertEquals('6.0', $config->requiresWordPress);
         $this->assertEquals('8.0', $config->requiresPHP);
         $this->assertEquals('{slug}-v{version}.zip', $config->assetPattern);
     }
-    
+
     public function testCustomConfiguration()
     {
         $options = [
@@ -31,9 +31,9 @@ class UpdaterConfigTest extends TestCase
             'ajax_action' => 'custom_check',
             'ajax_nonce' => 'custom_nonce'
         ];
-        
+
         $config = new UpdaterConfig('/path/to/plugin.php', 'owner/repo', $options);
-        
+
         $this->assertEquals('Test Plugin', $config->pluginName);
         $this->assertEquals('A test plugin', $config->pluginDescription);
         $this->assertEquals('Test Author', $config->pluginAuthor);
