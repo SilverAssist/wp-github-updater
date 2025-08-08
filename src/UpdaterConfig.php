@@ -14,67 +14,110 @@ namespace SilverAssist\WpGithubUpdater;
 
 /**
  * Configuration class for the GitHub updater
+ *
+ * This class holds all the configuration settings needed for the updater to work.
+ * It provides a structured way to pass plugin information and updater settings
+ * to the main Updater class.
+ *
+ * @package SilverAssist\WpGithubUpdater
+ * @since   1.0.0
  */
 class UpdaterConfig
 {
     /**
      * Plugin file path
+     *
+     * @var string Path to the main plugin file
+     * @since 1.0.0
      */
     public string $pluginFile;
 
     /**
      * GitHub repository (owner/repo)
+     *
+     * @var string GitHub repository in the format 'owner/repo'
+     * @since 1.0.0
      */
     public string $githubRepo;
 
     /**
      * Plugin name
+     *
+     * @var string Display name of the plugin
+     * @since 1.0.0
      */
     public string $pluginName;
 
     /**
      * Plugin description
+     *
+     * @var string Brief description of the plugin
+     * @since 1.0.0
      */
     public string $pluginDescription;
 
     /**
      * Plugin author
+     *
+     * @var string Author name or company
+     * @since 1.0.0
      */
     public string $pluginAuthor;
 
     /**
      * Plugin homepage
+     *
+     * @var string URL to the plugin's homepage
+     * @since 1.0.0
      */
     public string $pluginHomepage;
 
     /**
      * Minimum WordPress version
+     *
+     * @var string Minimum required WordPress version
+     * @since 1.0.0
      */
     public string $requiresWordPress;
 
     /**
      * Minimum PHP version
+     *
+     * @var string Minimum required PHP version
+     * @since 1.0.0
      */
     public string $requiresPHP;
 
     /**
      * Release asset filename pattern
      * Use {version} as placeholder for version number
+     *
+     * @var string Pattern for GitHub release asset filename
+     * @since 1.0.0
      */
     public string $assetPattern;
 
     /**
      * Cache duration in seconds
+     *
+     * @var int How long to cache version information
+     * @since 1.0.0
      */
     public int $cacheDuration;
 
     /**
      * AJAX action name for manual version check
+     *
+     * @var string WordPress AJAX action name
+     * @since 1.0.0
      */
     public string $ajaxAction;
 
     /**
      * AJAX nonce name
+     *
+     * @var string WordPress nonce name for AJAX requests
+     * @since 1.0.0
      */
     public string $ajaxNonce;
 
@@ -83,7 +126,9 @@ class UpdaterConfig
      *
      * @param string $pluginFile Main plugin file path
      * @param string $githubRepo GitHub repository (owner/repo)
-     * @param array $options Additional configuration options
+     * @param array  $options    Additional configuration options
+     *
+     * @since 1.0.0
      */
     public function __construct(string $pluginFile, string $githubRepo, array $options = [])
     {
@@ -108,6 +153,14 @@ class UpdaterConfig
 
     /**
      * Get plugin data from file
+     *
+     * Retrieves plugin metadata from the plugin file header.
+     * Falls back to empty array when WordPress functions aren't available.
+     *
+     * @param string $pluginFile Path to the plugin file
+     * @return array Plugin data array
+     *
+     * @since 1.0.0
      */
     private function getPluginData(string $pluginFile): array
     {

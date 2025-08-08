@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1] - 2025-08-07
+### Added
+- Markdown to HTML parser for changelog display
+- Support for headers (#, ##, ###, ####), bold text (**text**), italic text (*text*), inline code (`code`), lists (- item), and links ([text](url))
+- Improved changelog readability in WordPress plugin update modal
+
+### Changed
+- Enhanced changelog formatting from raw markdown to formatted HTML
+
 ## [1.0.0] - 2025-08-07
 ### Added
 

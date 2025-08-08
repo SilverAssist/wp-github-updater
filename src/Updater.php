@@ -14,43 +14,72 @@ namespace SilverAssist\WpGithubUpdater;
 
 /**
  * Main updater class that handles plugin updates from GitHub releases
+ *
+ * This class integrates with WordPress update system to provide automatic
+ * updates from GitHub releases. It handles version checking, plugin information
+ * display, and the actual update process.
+ *
+ * @package SilverAssist\WpGithubUpdater
+ * @since   1.0.0
  */
 class Updater
 {
     /**
      * Updater configuration
+     *
+     * @var UpdaterConfig Configuration object with all updater settings
+     * @since 1.0.0
      */
     private UpdaterConfig $config;
 
     /**
      * Plugin slug (folder/file.php)
+     *
+     * @var string WordPress plugin slug identifier
+     * @since 1.0.0
      */
     private string $pluginSlug;
 
     /**
      * Plugin basename (folder name only)
+     *
+     * @var string Plugin directory name without file extension
+     * @since 1.0.0
      */
     private string $pluginBasename;
 
     /**
      * Current plugin version
+     *
+     * @var string Current version of the plugin being updated
+     * @since 1.0.0
      */
     private string $currentVersion;
 
     /**
      * Plugin data from header
+     *
+     * @var array Plugin metadata extracted from plugin file header
+     * @since 1.0.0
      */
     private array $pluginData;
 
     /**
      * Transient name for version cache
+     *
+     * @var string WordPress transient key for caching version information
+     * @since 1.0.0
      */
     private string $versionTransient;
 
     /**
      * Initialize the updater
      *
-     * @param UpdaterConfig $config Updater configuration
+     * Sets up plugin identification, version information and WordPress hooks.
+     *
+     * @param UpdaterConfig $config Updater configuration object
+     *
+     * @since 1.0.0
      */
     public function __construct(UpdaterConfig $config)
     {
@@ -68,6 +97,12 @@ class Updater
 
     /**
      * Initialize WordPress hooks
+     *
+     * Sets up filters and actions needed for WordPress update system integration.
+     *
+     * @return void
+     *
+     * @since 1.0.0
      */
     private function initHooks(): void
     {
@@ -240,7 +275,7 @@ class Updater
             $body = $release['body'] ?: 'No release notes provided.';
 
             $changelog .= "<h4>Version {$version} ({$date})</h4>\n";
-            $changelog .= "<div>" . \wp_kses_post($body) . "</div>\n\n";
+            $changelog .= "<div>" . \wp_kses_post($this->parseMarkdownToHtml($body)) . "</div>\n\n";
         }
 
         return $changelog ?: 'No changelog available.';
@@ -370,5 +405,58 @@ class Updater
     {
         $latestVersion = $this->getLatestVersion();
         return $latestVersion && version_compare($this->currentVersion, $latestVersion, '<');
+    }
+
+    /**
+     * Parse Markdown to HTML
+     *
+     * Converts basic Markdown syntax to HTML for better changelog display.
+     * Supports headers, bold text, italic text, inline code, lists, and links.
+     *
+     * @param string $markdown Markdown content to convert
+     * @return string HTML formatted content
+     *
+     * @since 1.0.1
+     */
+    private function parseMarkdownToHtml(string $markdown): string
+    {
+        // Basic markdown to HTML conversion
+        $html = $markdown;
+
+        // Headers (# -> h2, ## -> h3, ### -> h4, #### -> h5)
+        $html = preg_replace('/^#### (.*$)/m', '<h5>$1</h5>', $html);
+        $html = preg_replace('/^### (.*$)/m', '<h4>$1</h4>', $html);
+        $html = preg_replace('/^## (.*$)/m', '<h3>$1</h3>', $html);
+        $html = preg_replace('/^# (.*$)/m', '<h2>$1</h2>', $html);
+
+        // Bold text (**text** -> <strong>text</strong>)
+        $html = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $html);
+
+        // Italic text (*text* -> <em>text</em>)
+        $html = preg_replace('/(?<!\*)\*([^*]+)\*(?!\*)/', '<em>$1</em>', $html);
+
+        // Code blocks (`code` -> <code>code</code>)
+        $html = preg_replace('/`([^`]+)`/', '<code>$1</code>', $html);
+
+        // Unordered lists (- item -> <ul><li>item</li></ul>)
+        $html = preg_replace_callback('/(?:^- (.+)(?:\n|$))+/m', function ($matches) {
+            $items = preg_split('/\n- /', trim($matches[0]));
+            $items[0] = ltrim($items[0], '- ');
+            $liItems = array_map(fn($item) => '<li>' . trim($item) . '</li>', array_filter($items));
+            return '<ul>' . implode('', $liItems) . '</ul>';
+        }, $html);
+
+        // Links ([text](url) -> <a href="url">text</a>)
+        $html = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<a href="$2">$1</a>', $html);
+
+        // Line breaks (double newline -> <br><br>)
+        $html = preg_replace('/\n\s*\n/', '<br><br>', $html);
+        $html = preg_replace('/\n/', '<br>', $html);
+
+        // Clean up extra line breaks and spaces
+        $html = preg_replace('/(<br>\s*){3,}/', '<br><br>', $html);
+        $html = trim($html);
+
+        return $html;
     }
 }
