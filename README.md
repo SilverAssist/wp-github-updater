@@ -229,10 +229,13 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Security
 
-If you discover any security related issues, please email security@silverassist.com instead of using the issue tracker.
+If you discover any security related issues, please report them via [GitHub Issues](https://github.com/SilverAssist/wp-github-updater/issues) with the "security" label.
 
 ## Support
 
 - **Documentation**: This README and code comments
 - **Issues**: [GitHub Issues](https://github.com/SilverAssist/wp-github-updater/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SilverAssist/wp-github-updater/discussions)
+
+---
+
+**Made with ❤️ by [Silver Assist](https://silverassist.com)**
