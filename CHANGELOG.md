@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.1] - 2025-08-12
+### Added
+- **GitHub Actions workflow**: Automated release creation when tags are pushed
+- **Automated testing in CI**: PHPUnit and PHPCS validation in release pipeline
+- **Release documentation**: Automated generation of release notes from CHANGELOG.md
+- **Package validation**: Automated structure validation and version consistency checks
+
+### Fixed
+- **Release automation**: Streamlined release process with comprehensive GitHub Actions workflow
+
 ## [1.1.0] - 2025-08-12
 ### Added
 - **Configurable text domain support**: New `text_domain` option in `UpdaterConfig` constructor for internationalization flexibility
