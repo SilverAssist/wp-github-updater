@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.2] - 2025-08-07
+### Added
+- Centralized HTTP header management with `getApiHeaders()` and `getDownloadHeaders()` methods
+- Enhanced PHPDoc documentation with comprehensive descriptions and `@since` annotations
+
+### Changed
+- Refactored HTTP request configurations to eliminate code duplication
+- Improved code maintainability through centralized header management patterns
+- Updated User-Agent headers to include version information (WP-GitHub-Updater/1.0.2)
+
+### Fixed
+- Enhanced GitHub API request reliability through consistent header usage
+- Improved download stability with optimized headers for GitHub asset downloads
+
 ## [1.0.1] - 2025-08-07
 ### Added
 - Markdown to HTML parser for changelog display

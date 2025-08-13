@@ -120,8 +120,13 @@ class Updater
     /**
      * Check for plugin updates
      *
-     * @param mixed $transient The update_plugins transient
-     * @return mixed
+     * Compares the current plugin version with the latest GitHub release
+     * and adds update information to the WordPress update transient if needed.
+     *
+     * @param mixed $transient The update_plugins transient containing current plugin versions
+     * @return mixed The modified transient with update information added if available
+     *
+     * @since 1.0.0
      */
     public function checkForUpdate($transient)
     {
@@ -150,10 +155,15 @@ class Updater
     /**
      * Get plugin information for the update API
      *
+     * Provides detailed plugin information when WordPress requests it,
+     * including version, changelog, and download information.
+     *
      * @param false|object|array $result The result object or array
      * @param string $action The type of information being requested
      * @param object $args Plugin API arguments
-     * @return false|object|array
+     * @return false|object|array Plugin information object or original result
+     *
+     * @since 1.0.0
      */
     public function pluginInfo($result, string $action, object $args)
     {
@@ -185,11 +195,15 @@ class Updater
     }
 
     /**
-     * Get the latest version from GitHub releases
+     * Get latest version from GitHub
      *
-     * @return string|false
+     * Fetches the latest release version from GitHub API with caching support.
+     *
+     * @return string|false Latest version string or false if failed
+     *
+     * @since 1.0.0
      */
-    public function getLatestVersion()
+    private function getLatestVersion()
     {
         // Check cache first
         $cachedVersion = \get_transient($this->versionTransient);
@@ -200,10 +214,7 @@ class Updater
         $apiUrl = "https://api.github.com/repos/{$this->config->githubRepo}/releases/latest";
         $response = \wp_remote_get($apiUrl, [
             'timeout' => 15,
-            'headers' => [
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . \get_bloginfo('version'),
-            ],
+            'headers' => $this->getApiHeaders(),
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
@@ -267,10 +278,7 @@ class Updater
 
         $response = \wp_remote_get($apiUrl, [
             'timeout' => 10,
-            'headers' => [
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . \get_bloginfo('version') . '; ' . home_url(),
-            ],
+            'headers' => $this->getApiHeaders(),
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
@@ -297,17 +305,18 @@ class Updater
     /**
      * Get changelog from GitHub releases
      *
-     * @return string
+     * Fetches release notes from GitHub API and formats them as HTML.
+     *
+     * @return string Formatted changelog HTML
+     *
+     * @since 1.0.0
      */
     private function getChangelog(): string
     {
         $apiUrl = "https://api.github.com/repos/{$this->config->githubRepo}/releases";
         $response = \wp_remote_get($apiUrl, [
             'timeout' => 15,
-            'headers' => [
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . \get_bloginfo('version'),
-            ],
+            'headers' => $this->getApiHeaders(),
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
@@ -337,17 +346,18 @@ class Updater
     /**
      * Get last updated date
      *
-     * @return string
+     * Fetches the publication date of the latest release from GitHub API.
+     *
+     * @return string Last updated date in Y-m-d format
+     *
+     * @since 1.0.0
      */
     private function getLastUpdated(): string
     {
         $apiUrl = "https://api.github.com/repos/{$this->config->githubRepo}/releases/latest";
         $response = \wp_remote_get($apiUrl, [
             'timeout' => 15,
-            'headers' => [
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . \get_bloginfo('version'),
-            ],
+            'headers' => $this->getApiHeaders(),
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
@@ -534,11 +544,7 @@ class Updater
         // Use wp_remote_get with better parameters
         $args = [
             'timeout' => 300, // 5 minutes
-            'user-agent' => 'WordPress/' . \get_bloginfo('version') . '; ' . \home_url(),
-            'headers' => [
-                'Accept' => 'application/octet-stream',
-                'Accept-Encoding' => 'identity', // Prevent compression issues
-            ],
+            'headers' => $this->getDownloadHeaders(),
             'sslverify' => true,
             'stream' => false,
             'filename' => null,
@@ -571,5 +577,42 @@ class Updater
         fclose($file_handle);
 
         return $temp_file;
+    }
+
+    /**
+     * Get headers for GitHub API requests
+     *
+     * Returns standard headers for GitHub API communication including
+     * User-Agent and Accept headers for optimal API interaction.
+     *
+     * @return array<string, string> Array of HTTP headers
+     *
+     * @since 1.0.2
+     */
+    private function getApiHeaders(): array
+    {
+        return [
+            'User-Agent' => 'WP-GitHub-Updater/1.0.2',
+            'Accept' => 'application/vnd.github.v3+json',
+        ];
+    }
+
+    /**
+     * Get headers for GitHub asset downloads
+     *
+     * Returns headers optimized for downloading GitHub release assets
+     * including compression support and extended timeouts.
+     *
+     * @return array<string, string> Array of HTTP headers
+     *
+     * @since 1.0.2
+     */
+    private function getDownloadHeaders(): array
+    {
+        return [
+            'User-Agent' => 'WP-GitHub-Updater/1.0.2',
+            'Accept' => 'application/octet-stream',
+            'Accept-Encoding' => 'gzip, deflate',
+        ];
     }
 }
