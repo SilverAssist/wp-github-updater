@@ -78,11 +78,11 @@ jobs:
               run: |
                   echo "🧪 Running PHPUnit tests..."
                   echo "Working directory: $(pwd)"
-                  echo "PHPUnit config exists: $(ls -la phpunit.xml)"
-                  echo "Bootstrap file exists: $(ls -la tests/bootstrap.php)"
-                  echo "Test files:"
+                  echo "Checking for phpunit.xml:"
+                  ls -la phpunit.xml || echo "phpunit.xml not found"
+                  echo "Checking tests directory:"
                   ls -la tests/
-                  ./vendor/bin/phpunit --configuration phpunit.xml --verbose
+                  ./vendor/bin/phpunit --configuration=phpunit.xml
                   echo "✅ All tests passed"
 
             - name: Run code quality checks
