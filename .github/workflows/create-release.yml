@@ -77,7 +77,12 @@ jobs:
             - name: Run tests
               run: |
                   echo "🧪 Running PHPUnit tests..."
-                  ./vendor/bin/phpunit
+                  echo "Working directory: $(pwd)"
+                  echo "PHPUnit config exists: $(ls -la phpunit.xml)"
+                  echo "Bootstrap file exists: $(ls -la tests/bootstrap.php)"
+                  echo "Test files:"
+                  ls -la tests/
+                  ./vendor/bin/phpunit --configuration phpunit.xml --verbose
                   echo "✅ All tests passed"
 
             - name: Run code quality checks

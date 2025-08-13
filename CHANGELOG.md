@@ -1,15 +1,5 @@
 # Changelog
 
-## [1.1.1] - 2025-08-12
-### Added
-- **GitHub Actions workflow**: Automated release creation when tags are pushed
-- **Automated testing in CI**: PHPUnit and PHPCS validation in release pipeline
-- **Release documentation**: Automated generation of release notes from CHANGELOG.md
-- **Package validation**: Automated structure validation and version consistency checks
-
-### Fixed
-- **Release automation**: Streamlined release process with comprehensive GitHub Actions workflow
-
 ## [1.1.0] - 2025-08-12
 ### Added
 - **Configurable text domain support**: New `text_domain` option in `UpdaterConfig` constructor for internationalization flexibility
@@ -20,6 +10,10 @@
 - **String quotation standardization**: All strings now consistently use double quotes as per project standards
 - **Enhanced type declarations**: Full PHP 8+ type hint coverage with union types and nullable parameters
 - **Enhanced PHPDoc documentation**: Comprehensive descriptions and `@since` annotations throughout codebase
+- **GitHub Actions workflow**: Automated release creation when tags are pushed
+- **Automated testing in CI**: PHPUnit and PHPCS validation in release pipeline
+- **Release documentation**: Automated generation of release notes from CHANGELOG.md
+- **Package validation**: Automated structure validation and version consistency checks
 
 ### Changed
 - **Improved internationalization architecture**: Text domain now configurable per consuming plugin instead of hardcoded
