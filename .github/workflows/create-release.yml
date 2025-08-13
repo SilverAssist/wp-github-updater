@@ -1,0 +1,285 @@
+name: Create Release
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Version number (e.g., 1.1.0)"
+                required: true
+                default: "1.1.0"
+
+jobs:
+    build-and-release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.1"
+                  extensions: mbstring, xml, ctype, json, tokenizer
+                  coverage: none
+
+            - name: Install Composer dependencies
+              run: |
+                  composer install --no-dev --optimize-autoloader --no-interaction
+                  echo "✅ Composer dependencies installed successfully"
+
+            - name: Extract version from tag or input
+              id: version
+              run: |
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    VERSION="${{ github.event.inputs.version }}"
+                  else
+                    VERSION=${GITHUB_REF#refs/tags/v}
+                  fi
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+                  echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Validate package structure
+              run: |
+                  VERSION="${{ steps.version.outputs.version }}"
+                  
+                  echo "🔍 Validating WP GitHub Updater package structure..."
+                  
+                  # Check core files exist
+                  if [ ! -f "src/Updater.php" ]; then
+                    echo "❌ Missing core file: src/Updater.php"
+                    exit 1
+                  fi
+                  
+                  if [ ! -f "src/UpdaterConfig.php" ]; then
+                    echo "❌ Missing core file: src/UpdaterConfig.php"
+                    exit 1
+                  fi
+                  
+                  if [ ! -f "composer.json" ]; then
+                    echo "❌ Missing composer.json"
+                    exit 1
+                  fi
+                  
+                  # Verify version consistency in composer.json
+                  COMPOSER_VERSION=$(grep '"version"' composer.json | head -n1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+                  if [ "$COMPOSER_VERSION" != "$VERSION" ]; then
+                    echo "⚠️ Warning: Version in composer.json ($COMPOSER_VERSION) doesn't match tag ($VERSION)"
+                  else
+                    echo "✅ Version consistency verified: $VERSION"
+                  fi
+                  
+                  echo "✅ Package structure validation completed"
+
+            - name: Run tests
+              run: |
+                  echo "🧪 Running PHPUnit tests..."
+                  ./vendor/bin/phpunit
+                  echo "✅ All tests passed"
+
+            - name: Run code quality checks
+              run: |
+                  echo "🔍 Running PHP CodeSniffer..."
+                  ./vendor/bin/phpcs --standard=phpcs.xml src/ tests/
+                  echo "✅ Code quality checks passed"
+
+            - name: Generate release notes from CHANGELOG
+              id: changelog
+              run: |
+                  VERSION="${{ steps.version.outputs.version }}"
+                  
+                  echo "📝 Generating release notes from CHANGELOG.md..."
+
+                  # Extract current version changes from CHANGELOG.md
+                  if [ -f "CHANGELOG.md" ]; then
+                    echo "Looking for version $VERSION in CHANGELOG.md"
+                    
+                    # Method 1: Using sed with escaped brackets (most reliable)
+                    CHANGES=$(sed -n "/## \\[${VERSION}\\]/,/## \\[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+                    
+                    if [ -n "$CHANGES" ]; then
+                      echo "Found changes with sed method"
+                      echo "## What's New in v$VERSION" > release_notes.md
+                      echo "$CHANGES" >> release_notes.md
+                    else
+                      echo "Sed method failed, trying awk method"
+                      # Method 2: Using awk (more reliable across different systems)
+                      CHANGES_AWK=$(awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" CHANGELOG.md)
+                      
+                      if [ -n "$CHANGES_AWK" ]; then
+                        echo "Found changes with awk method"
+                        echo "## What's New in v$VERSION" > release_notes.md
+                        echo "$CHANGES_AWK" >> release_notes.md
+                      else
+                        echo "Using fallback release notes"
+                        echo "## What's New in v$VERSION" > release_notes.md
+                        echo "See [CHANGELOG.md](CHANGELOG.md) for detailed changes." >> release_notes.md
+                      fi
+                    fi
+                  else
+                    echo "CHANGELOG.md not found, creating default release notes"
+                    echo "## Release v$VERSION" > release_notes.md
+                    echo "New release of WP GitHub Updater package" >> release_notes.md
+                  fi
+
+                  # Add package information to release notes
+                  cat >> release_notes.md << EOF
+
+                  ## 📦 Package Information
+                  - **Package Name**: wp-github-updater
+                  - **Version**: $VERSION
+                  - **Namespace**: SilverAssist\\WpGithubUpdater
+                  - **License**: MIT
+                  - **PHP Version**: 8.0+
+                  - **WordPress Version**: 6.0+
+
+                  ## 🚀 Installation via Composer
+                  \`\`\`bash
+                  composer require silverassist/wp-github-updater:^$VERSION
+                  \`\`\`
+
+                  ## 📋 Basic Usage
+                  \`\`\`php
+                  use SilverAssist\\WpGithubUpdater\\UpdaterConfig;
+                  use SilverAssist\\WpGithubUpdater\\Updater;
+
+                  // Configure the updater
+                  \$config = new UpdaterConfig(__FILE__, 'owner/repository', [
+                      'text_domain' => 'my-plugin-textdomain', // v1.1.0+ feature
+                  ]);
+
+                  // Initialize the updater
+                  \$updater = new Updater(\$config);
+                  \`\`\`
+
+                  ## ✨ Key Features
+                  - 🔄 Automatic WordPress plugin updates from GitHub releases
+                  - 🌍 Configurable internationalization (i18n) support
+                  - 📋 WordPress admin integration with update notifications
+                  - 🔒 Secure GitHub API communication with proper error handling
+                  - ⚡ Efficient caching system for version checks
+                  - 🧪 Comprehensive PHPUnit test suite
+                  - 📝 PSR-12 + WordPress coding standards compliance
+                  - 🎯 Modern PHP 8+ architecture with strict typing
+
+                  ## 📚 Documentation
+                  - **README**: [Installation and usage guide](README.md)
+                  - **CHANGELOG**: [Complete version history](CHANGELOG.md) 
+                  - **Examples**: [Integration examples](examples/)
+                  - **API Docs**: Comprehensive PHPDoc documentation
+
+                  ## 🔧 Requirements
+                  - PHP 8.0 or higher
+                  - WordPress 6.0 or higher
+                  - Composer for package management
+                  - GitHub repository with releases for updates
+
+                  ## 🐛 Issues & Support
+                  Found a bug or need help? Please [open an issue](https://github.com/SilverAssist/wp-github-updater/issues) on GitHub.
+                  EOF
+
+            - name: Update RELEASE-NOTES.md
+              run: |
+                  VERSION="${{ steps.version.outputs.version }}"
+                  DATE=$(date +"%B %d, %Y")
+
+                  # Create updated RELEASE-NOTES.md
+                  cat > RELEASE-NOTES.md << EOF
+                  # WP GitHub Updater - Release v$VERSION
+
+                  ## Package Information
+                  - **Package Name**: wp-github-updater
+                  - **Version**: $VERSION
+                  - **Release Date**: $DATE
+                  - **License**: MIT
+                  - **Repository**: https://github.com/SilverAssist/wp-github-updater
+
+                  ## Package Contents
+                  - Core updater classes (\`src/Updater.php\`, \`src/UpdaterConfig.php\`)
+                  - Comprehensive test suite (\`tests/\`)
+                  - Integration examples (\`examples/\`)
+                  - Documentation ([README.md](README.md), [CHANGELOG.md](CHANGELOG.md))
+                  - Coding standards configuration (\`phpcs.xml\`)
+                  - PHPUnit configuration (\`phpunit.xml\`)
+                  - Composer package definition (\`composer.json\`)
+
+                  ## Installation via Composer
+                  \`\`\`bash
+                  composer require silverassist/wp-github-updater:^$VERSION
+                  \`\`\`
+
+                  ## Requirements
+                  - PHP 8.0+
+                  - WordPress 6.0+
+                  - Composer
+                  - GitHub repository with releases
+
+                  ## Key Features
+                  - Automatic WordPress plugin updates from GitHub releases
+                  - Configurable internationalization (i18n) support
+                  - WordPress admin dashboard integration
+                  - Secure GitHub API communication
+                  - Efficient version caching system
+                  - Modern PHP 8+ architecture with strict typing
+                  - Comprehensive test coverage
+                  - PSR-12 + WordPress coding standards
+
+                  ## Usage Example
+                  \`\`\`php
+                  use SilverAssist\\WpGithubUpdater\\UpdaterConfig;
+                  use SilverAssist\\WpGithubUpdater\\Updater;
+
+                  // Configure the updater
+                  \$config = new UpdaterConfig(__FILE__, 'owner/repository', [
+                      'text_domain' => 'my-plugin-textdomain',
+                  ]);
+
+                  // Initialize the updater
+                  \$updater = new Updater(\$config);
+                  \`\`\`
+
+                  ## Support & Documentation
+                  - **Installation Guide**: [README.md](README.md)
+                  - **Change History**: [CHANGELOG.md](CHANGELOG.md)
+                  - **Integration Examples**: [examples/](examples/)
+                  - **Issues**: [GitHub Issues](https://github.com/SilverAssist/wp-github-updater/issues)
+
+                  ## Distribution
+                  - **Packagist**: https://packagist.org/packages/silverassist/wp-github-updater
+                  - **GitHub Releases**: https://github.com/SilverAssist/wp-github-updater/releases
+                  EOF
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: ${{ steps.version.outputs.tag }}
+                  name: "WP GitHub Updater v${{ steps.version.outputs.version }}"
+                  body_path: release_notes.md
+                  draft: false
+                  prerelease: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Summary
+              run: |
+                  echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Package**: WP GitHub Updater" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Composer**: \`silverassist/wp-github-updater:^${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Release**: [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### ✨ Package Features" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🔄 Automatic WordPress plugin updates from GitHub" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🌍 Configurable internationalization support" >> $GITHUB_STEP_SUMMARY
+                  echo "- 📋 WordPress admin dashboard integration" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🔒 Secure GitHub API communication" >> $GITHUB_STEP_SUMMARY
+                  echo "- ⚡ Efficient caching system" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🎯 Modern PHP 8+ architecture" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 📦 Installation" >> $GITHUB_STEP_SUMMARY
+                  echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+                  echo "composer require silverassist/wp-github-updater:^${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+                  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
