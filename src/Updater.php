@@ -110,6 +110,9 @@ class Updater
         \add_filter('plugins_api', [$this, 'pluginInfo'], 20, 3);
         \add_action('upgrader_process_complete', [$this, 'clearVersionCache'], 10, 2);
 
+        // Improve download reliability
+        \add_filter('upgrader_pre_download', [$this, 'maybeFixDownload'], 10, 4);
+
         // Add AJAX action for manual version check
         \add_action("wp_ajax_{$this->config->ajaxAction}", [$this, 'manualVersionCheck']);
     }
@@ -228,9 +231,18 @@ class Updater
      *
      * @param string $version The version to download
      * @return string
+     *
+     * @since 1.0.0
      */
     private function getDownloadUrl(string $version): string
     {
+        // First try to get the actual download URL from the release assets
+        $downloadUrl = $this->getAssetDownloadUrl($version);
+        if ($downloadUrl) {
+            return $downloadUrl;
+        }
+
+        // Fallback to constructed URL
         $pattern = $this->config->assetPattern;
         $filename = str_replace(
             ['{slug}', '{version}'],
@@ -239,6 +251,47 @@ class Updater
         );
 
         return "https://github.com/{$this->config->githubRepo}/releases/download/v{$version}/{$filename}";
+    }
+
+    /**
+     * Get actual asset download URL from GitHub API
+     *
+     * @param string $version The version to get asset URL for
+     * @return string|null Asset download URL or null if not found
+     *
+     * @since 1.0.2
+     */
+    private function getAssetDownloadUrl(string $version): ?string
+    {
+        $apiUrl = "https://api.github.com/repos/{$this->config->githubRepo}/releases/tags/v{$version}";
+
+        $response = \wp_remote_get($apiUrl, [
+            'timeout' => 10,
+            'headers' => [
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'WordPress/' . \get_bloginfo('version') . '; ' . home_url(),
+            ],
+        ]);
+
+        if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
+            return null;
+        }
+
+        $body = \wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (!isset($data['assets']) || empty($data['assets'])) {
+            return null;
+        }
+
+        // Look for the ZIP asset
+        foreach ($data['assets'] as $asset) {
+            if (str_ends_with($asset['name'], '.zip')) {
+                return $asset['browser_download_url'];
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -338,7 +391,7 @@ class Updater
                 'code' => 'invalid_nonce'
             ]);
         }
-        
+
         if (!\current_user_can('update_plugins')) {
             \wp_send_json_error([
                 'message' => 'Insufficient permissions',
@@ -372,7 +425,7 @@ class Updater
         if (!function_exists('get_plugin_data')) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
-        
+
         return \get_plugin_data($this->config->pluginFile);
     }
 
@@ -458,5 +511,65 @@ class Updater
         $html = trim($html);
 
         return $html;
+    }
+
+    /**
+     * Maybe fix download issues by providing better HTTP args
+     *
+     * @param bool|\WP_Error $result
+     * @param string $package
+     * @param object $upgrader
+     * @param array $hook_extra
+     * @return bool|\WP_Error
+     *
+     * @since 1.0.2
+     */
+    public function maybeFixDownload($result, string $package, $upgrader, array $hook_extra)
+    {
+        // Only handle GitHub downloads for our plugin
+        if (!str_contains($package, 'github.com') || !str_contains($package, $this->config->githubRepo)) {
+            return $result;
+        }
+
+        // Use wp_remote_get with better parameters
+        $args = [
+            'timeout' => 300, // 5 minutes
+            'user-agent' => 'WordPress/' . \get_bloginfo('version') . '; ' . \home_url(),
+            'headers' => [
+                'Accept' => 'application/octet-stream',
+                'Accept-Encoding' => 'identity', // Prevent compression issues
+            ],
+            'sslverify' => true,
+            'stream' => false,
+            'filename' => null,
+        ];
+
+        $response = \wp_remote_get($package, $args);
+
+        if (\is_wp_error($response)) {
+            return $response;
+        }
+
+        if (200 !== \wp_remote_retrieve_response_code($response)) {
+            return new \WP_Error('http_404', 'Package not found');
+        }
+
+        // Write to temporary file
+        $upload_dir = \wp_upload_dir();
+        $temp_file = \wp_tempnam(basename($package), $upload_dir['basedir'] . '/');
+
+        if (!$temp_file) {
+            return new \WP_Error('temp_file_failed', 'Could not create temporary file');
+        }
+
+        $file_handle = @fopen($temp_file, 'w');
+        if (!$file_handle) {
+            return new \WP_Error('file_open_failed', 'Could not open file for writing');
+        }
+
+        fwrite($file_handle, \wp_remote_retrieve_body($response));
+        fclose($file_handle);
+
+        return $temp_file;
     }
 }
