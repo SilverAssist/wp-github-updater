@@ -318,9 +318,11 @@ class Updater
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
+            $github_link = "<a href=\"https://github.com/{$this->config->githubRepo}/releases\">"
+                . $this->config->__("GitHub releases page") . "</a>";
             return sprintf(
                 $this->config->__("Unable to fetch changelog. Visit the %s for updates."),
-                "<a href=\"https://github.com/{$this->config->githubRepo}/releases\">" . $this->config->__("GitHub releases page") . "</a>"
+                $github_link
             );
         }
 
@@ -399,7 +401,8 @@ class Updater
     public function manualVersionCheck(): void
     {
         // Verify nonce
-        if (!\wp_verify_nonce($_POST["nonce"] ?? "", $this->config->ajaxNonce)) {
+        $nonce = \sanitize_text_field(\wp_unslash($_POST["nonce"] ?? ""));
+        if (!\wp_verify_nonce($nonce, $this->config->ajaxNonce)) {
             \wp_send_json_error([
                 "message" => $this->config->__("Security check failed"),
                 "code" => "invalid_nonce"
@@ -531,8 +534,12 @@ class Updater
      *
      * @since 1.1.0
      */
-    public function maybeFixDownload(bool|\WP_Error $result, string $package, object $upgrader, array $hook_extra): bool|\WP_Error
-    {
+    public function maybeFixDownload(
+        bool|\WP_Error $result,
+        string $package,
+        object $upgrader,
+        array $hook_extra
+    ): bool|\WP_Error {
         // Only handle GitHub downloads for our plugin
         if (!str_contains($package, "github.com") || !str_contains($package, $this->config->githubRepo)) {
             return $result;
