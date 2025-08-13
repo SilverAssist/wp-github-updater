@@ -22,14 +22,15 @@ use SilverAssist\WpGithubUpdater\Updater;
 use SilverAssist\WpGithubUpdater\UpdaterConfig;
 
 // Initialize updater (replaces your existing Updater class instantiation)
-add_action('init', function() {
+add_action("init", function() {
     $config = new UpdaterConfig(
         __FILE__, // Path to your main plugin file
-        'SilverAssist/silver-assist-security', // Your GitHub repo
+        "SilverAssist/silver-assist-security", // Your GitHub repo
         [
-            'asset_pattern' => 'silver-assist-security-v{version}.zip',
-            'ajax_action' => 'silver_assist_security_check_version',
-            'ajax_nonce' => 'silver_assist_security_ajax'
+            "asset_pattern" => "silver-assist-security-v{version}.zip",
+            "ajax_action" => "silver_assist_security_check_version",
+            "ajax_nonce" => "silver_assist_security_ajax",
+            "text_domain" => "silver-assist-security" // Your plugin's text domain
         ]
     );
     
@@ -50,14 +51,15 @@ require_once __DIR__ . '/vendor/autoload.php';
 use SilverAssist\WpGithubUpdater\Updater;
 use SilverAssist\WpGithubUpdater\UpdaterConfig;
 
-add_action('init', function() {
+add_action("init", function() {
     $config = new UpdaterConfig(
         __FILE__,
-        'your-username/leadgen-app-form', // Your GitHub repo
+        "your-username/leadgen-app-form", // Your GitHub repo
         [
-            'asset_pattern' => 'leadgen-app-form-v{version}.zip',
-            'ajax_action' => 'leadgen_check_version',
-            'ajax_nonce' => 'leadgen_version_check'
+            "asset_pattern" => "leadgen-app-form-v{version}.zip",
+            "ajax_action" => "leadgen_check_version",
+            "ajax_nonce" => "leadgen_version_check",
+            "text_domain" => "leadgen-app-form" // Your plugin's text domain
         ]
     );
     
@@ -89,17 +91,18 @@ use SilverAssist\WpGithubUpdater\Updater;
 use SilverAssist\WpGithubUpdater\UpdaterConfig;
 
 // Initialize the updater
-add_action('init', function() {
+add_action("init", function() {
     $config = new UpdaterConfig(
         __FILE__,
-        'your-username/my-new-plugin', // GitHub repository
+        "your-username/my-new-plugin", // GitHub repository
         [
             // Optional customizations
-            'asset_pattern' => 'my-plugin-{version}.zip',
-            'requires_php' => '8.1',
-            'requires_wordpress' => '6.2',
-            'ajax_action' => 'my_plugin_version_check',
-            'cache_duration' => 6 * 3600 // 6 hours
+            "asset_pattern" => "my-plugin-{version}.zip",
+            "requires_php" => "8.1",
+            "requires_wordpress" => "6.2",
+            "ajax_action" => "my_plugin_version_check",
+            "cache_duration" => 6 * 3600, // 6 hours
+            "text_domain" => "my-new-plugin" // Your plugin's text domain
         ]
     );
     

@@ -85,6 +85,19 @@ $updater = new Updater($config);
 | `cache_duration` | int | `43200` (12 hours) | Cache duration in seconds |
 | `ajax_action` | string | `'check_plugin_version'` | AJAX action name for manual checks |
 | `ajax_nonce` | string | `'plugin_version_check'` | AJAX nonce name |
+| `text_domain` | string | `'wp-github-updater'` | WordPress text domain for i18n **(New in 1.1.0)** |
+
+### Internationalization Support (i18n)
+
+Starting with version 1.1.0, you can specify a custom text domain for your plugin's translations:
+
+```php
+$config = new UpdaterConfig(__FILE__, "username/repository", [
+    "text_domain" => "my-plugin-textdomain" // Use your plugin's text domain
+]);
+```
+
+**Backward Compatibility**: Existing code without the `text_domain` option will continue to work using the default `wp-github-updater` text domain.
 
 ## GitHub Release Requirements
 
