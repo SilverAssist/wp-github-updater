@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2025-08-14
+### Changed
+- **License Migration**: Updated from GPL v2.0+ to PolyForm Noncommercial 1.0.0
+- **License References**: Updated all references in composer.json, README.md, source files, and GitHub Actions workflow
+- **License Documentation**: Updated license badges and documentation to reflect noncommercial licensing
+
 ## [1.1.0] - 2025-08-12
 ### Added
 - **Configurable text domain support**: New `text_domain` option in `UpdaterConfig` constructor for internationalization flexibility

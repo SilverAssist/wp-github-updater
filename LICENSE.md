@@ -1,61 +1,25 @@
-GNU GENERAL PUBLIC LICENSE
-Version 2, June 1991
+Polyform Noncommercial License 1.0.0
 
-Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-Everyone is permitted to copy and distribute verbatim copies
-of this license document, but changing it is not allowed.
+Acceptance
+In order to receive this license, you must agree to its rules. The rules of this license are both obligations under that agreement and conditions to your license. You must not do anything with the licensed material that triggers a rule you cannot or will not follow.
 
-For details, see https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+Copyright License
+The licensor grants you a copyright license for the licensed material to do everything you might do with the licensed material that would otherwise infringe the licensor’s copyright in it, for any noncommercial purpose, for the duration of the license, and in all territories. This license does not grant you rights to use the licensed material for commercial purposes.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+Commercial Purposes
+Commercial purposes means use of the licensed material for a purpose intended for or directed toward commercial advantage or monetary compensation.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Distribution and Modification
+You may distribute copies of the licensed material, in whole or in part, in any medium, and you may create and distribute modified versions of the licensed material, provided that you (a) do not use the licensed material for commercial purposes, and (b) include a complete copy of this license with your distribution.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Patent License
+The licensor grants you a patent license for the licensed material to make, have made, use, sell, offer for sale, and import the licensed material for any noncommercial purpose, for the duration of the license, and in all territories. This license does not grant you rights to use the licensed material for commercial purposes.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+No Other Rights
+These terms do not grant you any other rights in the licensed material, and all other rights are reserved by the licensor.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Termination
+If you use the licensed material in violation of this license, such use will automatically terminate your rights under this license. However, if you comply with this license after such violation, your rights will be reinstated unless the licensor has terminated this license by giving you written notice.
 
-Copyright (c) 2025 Silver Assist
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+No Liability
+As far as the law allows, the licensed material comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages related to this license or use of the licensed material, under any kind of legal claim.

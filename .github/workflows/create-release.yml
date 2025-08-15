@@ -137,7 +137,7 @@ jobs:
                   - **Package Name**: wp-github-updater
                   - **Version**: $VERSION
                   - **Namespace**: SilverAssist\\WpGithubUpdater
-                  - **License**: MIT
+                  - **License**: PolyForm Noncommercial 1.0.0
                   - **PHP Version**: 8.0+
                   - **WordPress Version**: 6.0+
 
@@ -199,7 +199,7 @@ jobs:
                   - **Package Name**: wp-github-updater
                   - **Version**: $VERSION
                   - **Release Date**: $DATE
-                  - **License**: MIT
+                  - **License**: PolyForm Noncommercial 1.0.0
                   - **Repository**: https://github.com/SilverAssist/wp-github-updater
 
                   ## Package Contents

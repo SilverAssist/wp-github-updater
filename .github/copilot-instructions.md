@@ -28,7 +28,7 @@ wp-github-updater/
 ├── composer.json                # Package definition
 ├── README.md                    # Documentation
 ├── CHANGELOG.md                 # Version history
-├── LICENSE.md                   # GPL v2.0 license
+├── LICENSE.md                   # PolyForm Noncommercial 1.0.0 license
 ├── phpcs.xml                    # Code standards
 ├── phpstan.neon                 # Static analysis
 └── phpunit.xml                  # Test configuration

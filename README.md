@@ -1,7 +1,7 @@
 # WordPress GitHub Updater
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/silverassist/wp-github-updater.svg?style=flat-square)](https://packagist.org/packages/silverassist/wp-github-updater)
-[![Software License](https://img.shields.io/badge/license-GPLv2-blue.svg?style=flat-square)](LICENSE.md)
+[![Software License](https://img.shields.io/badge/license-PolyForm--Noncommercial--1.0.0-blue.svg?style=flat-square)](LICENSE.md)
 [![Total Downloads](https://img.shields.io/packagist/dt/silverassist/wp-github-updater.svg?style=flat-square)](https://packagist.org/packages/silverassist/wp-github-updater)
 
 A reusable WordPress plugin updater that handles automatic updates from public GitHub releases. Perfect for WordPress plugins distributed outside the official repository.
@@ -229,7 +229,7 @@ composer check
 
 ## License
 
-This package is licensed under the GNU General Public License v2.0 or later (GPL-2.0-or-later). Please see [License File](LICENSE.md) for more information.
+This package is licensed under the Polyform Noncommercial License 1.0.0 (PolyForm-Noncommercial-1.0.0). This license allows for non-commercial use, modification, and distribution. Please see [License File](LICENSE.md) for more information.
 
 ## Credits
 

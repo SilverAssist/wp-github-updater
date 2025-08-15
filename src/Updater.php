@@ -7,7 +7,8 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @license GPL-2.0-or-later
+ * @version 1.1.1
+ * @license PolyForm-Noncommercial-1.0.0
  */
 
 namespace SilverAssist\WpGithubUpdater;

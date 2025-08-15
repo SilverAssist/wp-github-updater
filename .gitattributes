@@ -7,4 +7,5 @@
 /phpcs.xml export-ignore
 /phpstan.neon export-ignore
 /tests export-ignore
-/CHANGELOG.md export-ignore
+/scripts export-ignore
+/composer.lock export-ignore
