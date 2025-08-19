@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.1
+ * @version 1.1.2
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -203,7 +203,7 @@ class Updater
      *
      * @since 1.0.0
      */
-    private function getLatestVersion(): string|false
+    public function getLatestVersion(): string|false
     {
         // Check cache first
         $cachedVersion = \get_transient($this->versionTransient);

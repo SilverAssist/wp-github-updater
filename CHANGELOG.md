@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.2] - 2025-08-19
+### Changed
+- **API Accessibility**: Changed `getLatestVersion()` method visibility from `private` to `public` to allow external access from consuming plugins
+
 ## [1.1.1] - 2025-08-14
 ### Changed
 - **License Migration**: Updated from GPL v2.0+ to PolyForm Noncommercial 1.0.0
