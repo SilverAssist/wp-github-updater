@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.2
+ * @version 1.1.3
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -131,6 +131,14 @@ class UpdaterConfig
     public string $textDomain;
 
     /**
+     * Custom temporary directory path
+     *
+     * @var string|null Custom path for temporary files during downloads, null for auto-detection
+     * @since 1.1.3
+     */
+    public ?string $customTempDir;
+
+    /**
      * Create updater configuration
      *
      * Initializes the updater configuration with plugin metadata and settings.
@@ -162,6 +170,7 @@ class UpdaterConfig
         $this->ajaxAction = $options["ajax_action"] ?? "check_plugin_version";
         $this->ajaxNonce = $options["ajax_nonce"] ?? "plugin_version_check";
         $this->textDomain = $options["text_domain"] ?? "wp-github-updater";
+        $this->customTempDir = $options["custom_temp_dir"] ?? null;
     }
 
     /**

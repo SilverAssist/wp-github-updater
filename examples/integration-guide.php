@@ -113,6 +113,53 @@ add_action("init", function() {
 */
 
 /**
+ * Example for plugins with PCLZIP_ERR_MISSING_FILE issues
+ * Use custom temporary directory to avoid /tmp permission problems
+ */
+
+/*
+// For plugins experiencing PCLZIP_ERR_MISSING_FILE errors:
+
+add_action("init", function() {
+    $config = new UpdaterConfig(
+        __FILE__,
+        "your-username/your-plugin",
+        [
+            "text_domain" => "your-plugin",
+            "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Custom temp directory
+            // or use uploads directory:
+            // "custom_temp_dir" => wp_upload_dir()["basedir"] . "/temp",
+        ]
+    );
+    
+    new Updater($config);
+    
+    // Optionally create the directory on plugin activation
+    register_activation_hook(__FILE__, function() {
+        $temp_dir = WP_CONTENT_DIR . "/temp";
+        if (!file_exists($temp_dir)) {
+            wp_mkdir_p($temp_dir);
+        }
+    });
+});
+*/
+
+/**
+ * Alternative: WordPress configuration approach
+ * Add this to your wp-config.php file (before the line that says 
+ * "That's all, stop editing!"):
+ */
+
+/*
+// In wp-config.php, add this line:
+define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
+
+// Then create the directory with proper permissions:
+// mkdir wp-content/temp
+// chmod 755 wp-content/temp
+*/
+
+/**
  * Installation steps for existing plugins:
  * 
  * 1. Navigate to your plugin directory

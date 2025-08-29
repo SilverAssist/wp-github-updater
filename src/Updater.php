@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.2
+ * @version 1.1.3
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -565,23 +565,115 @@ class Updater
             return new \WP_Error("http_404", $this->config->__("Package not found"));
         }
 
-        // Write to temporary file
-        $upload_dir = \wp_upload_dir();
-        $temp_file = \wp_tempnam(basename($package), $upload_dir["basedir"] . "/");
+        // Try multiple approaches for creating temporary file to avoid PCLZIP errors
+        $temp_file = $this->createSecureTempFile($package);
 
-        if (!$temp_file) {
-            return new \WP_Error("temp_file_failed", $this->config->__("Could not create temporary file"));
+        if (\is_wp_error($temp_file)) {
+            return $temp_file;
         }
 
-        $file_handle = @fopen($temp_file, "w");
+        $file_handle = @fopen($temp_file, "wb");
         if (!$file_handle) {
             return new \WP_Error("file_open_failed", $this->config->__("Could not open file for writing"));
         }
 
-        fwrite($file_handle, \wp_remote_retrieve_body($response));
+        $body = \wp_remote_retrieve_body($response);
+        $bytes_written = fwrite($file_handle, $body);
         fclose($file_handle);
 
+        // Verify file was written correctly
+        if ($bytes_written === false || $bytes_written !== strlen($body)) {
+            @unlink($temp_file);
+            return new \WP_Error("file_write_failed", $this->config->__("Could not write to temporary file"));
+        }
+
+        // Verify file exists and is readable
+        if (!file_exists($temp_file) || !is_readable($temp_file)) {
+            return new \WP_Error("file_verification_failed", $this->config->__("Temporary file verification failed"));
+        }
+
         return $temp_file;
+    }
+
+    /**
+     * Create a secure temporary file with multiple fallback strategies
+     *
+     * Attempts different approaches to create a temporary file to avoid PCLZIP errors
+     * that can occur with restrictive /tmp directory permissions.
+     *
+     * @param string $package The package URL being downloaded
+     * @return string|\WP_Error Path to temporary file or WP_Error on failure
+     *
+     * @since 1.1.3
+     */
+    private function createSecureTempFile(string $package): string|\WP_Error
+    {
+        $filename = basename(parse_url($package, PHP_URL_PATH)) ?: "github-package.zip";
+
+        // Strategy 1: Use custom temporary directory if specified
+        if (!empty($this->config->customTempDir)) {
+            if (!is_dir($this->config->customTempDir)) {
+                @wp_mkdir_p($this->config->customTempDir);
+            }
+
+            if (is_dir($this->config->customTempDir) && is_writable($this->config->customTempDir)) {
+                $temp_file = \wp_tempnam($filename, $this->config->customTempDir . "/");
+                if ($temp_file) {
+                    return $temp_file;
+                }
+            }
+        }
+
+        // Strategy 2: Use WordPress uploads directory
+        $upload_dir = \wp_upload_dir();
+        if (!empty($upload_dir["basedir"]) && is_writable($upload_dir["basedir"])) {
+            $temp_file = \wp_tempnam($filename, $upload_dir["basedir"] . "/");
+            if ($temp_file) {
+                return $temp_file;
+            }
+        }
+
+        // Strategy 3: Use WP_CONTENT_DIR/temp if it exists or can be created
+        $wp_content_temp = WP_CONTENT_DIR . "/temp";
+        if (!is_dir($wp_content_temp)) {
+            @wp_mkdir_p($wp_content_temp);
+        }
+
+        if (is_dir($wp_content_temp) && is_writable($wp_content_temp)) {
+            $temp_file = \wp_tempnam($filename, $wp_content_temp . "/");
+            if ($temp_file) {
+                return $temp_file;
+            }
+        }
+
+        // Strategy 4: Use WordPress temporary directory (if defined)
+        if (defined("WP_TEMP_DIR") && is_dir(WP_TEMP_DIR) && is_writable(WP_TEMP_DIR)) {
+            $temp_file = \wp_tempnam($filename, WP_TEMP_DIR . "/");
+            if ($temp_file) {
+                return $temp_file;
+            }
+        }
+
+        // Strategy 5: Try system temp directory as last resort
+        $temp_file = \wp_tempnam($filename);
+        if ($temp_file) {
+            return $temp_file;
+        }
+
+        // Strategy 6: Manual temp file creation in uploads dir
+        if (!empty($upload_dir["basedir"])) {
+            $manual_temp = $upload_dir["basedir"] . "/" . uniqid("wp_github_updater_", true) . ".tmp";
+            $handle = @fopen($manual_temp, "w");
+            if ($handle) {
+                fclose($handle);
+                return $manual_temp;
+            }
+        }
+
+        return new \WP_Error(
+            "temp_file_creation_failed",
+            $this->config->__("Could not create temporary file. Please check directory permissions or define WP_TEMP_DIR in wp-config.php")
+        );
     }
 
     /**

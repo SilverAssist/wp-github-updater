@@ -44,6 +44,7 @@ wp-github-updater/
 - Cache duration and WordPress requirements
 - AJAX endpoints and nonce configuration
 - Plugin data parsing from WordPress headers
+- **Custom temporary directory configuration** (v1.1.3+)
 
 ### Updater Class
 **Purpose**: Core WordPress integration and GitHub API communication
@@ -54,6 +55,7 @@ wp-github-updater/
 - Download error handling and recovery
 - AJAX endpoints for manual update checks
 - Markdown-to-HTML conversion for changelogs
+- **Enhanced temporary file management with PCLZIP error resolution** (v1.1.3+)
 
 ### Security
 - **Nonce verification** for AJAX requests
@@ -88,6 +90,34 @@ class UpdaterConfig {
 
 // ❌ INCORRECT - Fixed text domain in package
 \__("Update available", "wp-github-updater");
+```
+
+### Temporary File Management Strategy
+**New in v1.1.3**: Enhanced handling to resolve `PCLZIP_ERR_MISSING_FILE (-4)` errors
+
+#### Multi-Tier Fallback System
+The package implements a robust 6-tier fallback system for temporary file creation:
+
+1. **Custom temporary directory** - User-specified via `custom_temp_dir` option
+2. **WordPress uploads directory** - Most reliable, within web root
+3. **WP_CONTENT_DIR/temp** - Auto-created if needed
+4. **WP_TEMP_DIR** - If defined in wp-config.php
+5. **System temporary directory** - OS default /tmp or equivalent
+6. **Manual file creation** - Last resort fallback
+
+#### Configuration Options
+```php
+$config = new UpdaterConfig($pluginFile, $githubRepo, [
+    "custom_temp_dir" => WP_CONTENT_DIR . "/temp",        // Custom directory
+    // or
+    "custom_temp_dir" => wp_upload_dir()["basedir"] . "/temp", // Uploads subdirectory
+]);
+```
+
+#### WordPress Configuration Alternative
+```php
+// In wp-config.php
+define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
 ```
 
 ### Coding Standards
@@ -142,6 +172,18 @@ class Updater {
 
     public function pluginInfo($result, string $action, object $args) {
         // Plugin information display
+    }
+
+    public function maybeFixDownload($result, string $package, object $upgrader, array $hook_extra) {
+        // Enhanced download handling with PCLZIP error resolution (v1.1.3+)
+    }
+
+    private function createSecureTempFile(string $package) {
+        // Multi-tier temporary file creation with fallback strategies (v1.1.3+)
+    }
+
+    public function getLatestVersion(): string|false {
+        // Public API method for external access (v1.1.2+)
     }
 
     // ... other methods
@@ -277,6 +319,7 @@ $config = new UpdaterConfig([
     "github_username" => "username",
     "github_repo" => "repository",
     "text_domain" => "my-plugin-domain", // Consumer's text domain
+    "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Optional: Custom temp directory (v1.1.3+)
     // ... other options
 ]);
 
@@ -286,6 +329,9 @@ $updater = new Updater($config);
 ### Error Handling Strategy
 - Use WordPress `WP_Error` class for error management
 - Provide fallback download mechanisms for GitHub API failures
+- Cache GitHub API responses to avoid rate limiting
+- Handle PCLZIP errors with alternative download methods
+- **PCLZIP_ERR_MISSING_FILE Resolution** (v1.1.3+): Multi-tier temporary file creation to avoid /tmp permission issues
 - Cache GitHub API responses to avoid rate limiting
 - Handle PCLZIP errors with alternative download methods
 

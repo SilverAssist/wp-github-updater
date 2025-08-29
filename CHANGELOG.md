@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.1.3] - 2025-08-29
+### Added
+- **Enhanced Temporary File Handling**: Implemented multiple fallback strategies for temporary file creation to resolve `PCLZIP_ERR_MISSING_FILE (-4)` errors
+- **Custom Temporary Directory Support**: New `custom_temp_dir` configuration option in UpdaterConfig for specifying alternative temporary directories
+- **Automatic Directory Creation**: The updater now attempts to create temporary directories if they don't exist
+- **Comprehensive File Verification**: Added file existence and readability checks after download to prevent installation failures
+
+### Changed
+- **Improved Download Reliability**: Enhanced `maybeFixDownload()` method with better error handling and multiple fallback strategies
+- **Robust Temporary File Strategy**: Six-tier fallback system for temporary file creation:
+  1. Custom temporary directory (if configured)
+  2. WordPress uploads directory
+  3. WP_CONTENT_DIR/temp (auto-created)
+  4. WP_TEMP_DIR (if defined in wp-config.php)
+  5. System temporary directory
+  6. Manual file creation as last resort
+
+### Fixed
+- **PCLZIP Error Resolution**: Addresses `PCLZIP_ERR_MISSING_FILE (-4)` errors caused by restrictive /tmp directory permissions
+- **File Write Verification**: Added byte-level verification to ensure complete file downloads
+- **Permission Issues**: Better handling of directory permission problems during plugin updates
+
+### Documentation
+- **Integration Examples**: Added examples for handling PCLZIP errors in integration guide
+- **WordPress Configuration**: Documented wp-config.php approach for setting custom temporary directories
+- **Troubleshooting Guide**: Comprehensive examples for different temporary directory configuration strategies
+
 ## [1.1.2] - 2025-08-19
 ### Changed
 - **API Accessibility**: Changed `getLatestVersion()` method visibility from `private` to `public` to allow external access from consuming plugins
