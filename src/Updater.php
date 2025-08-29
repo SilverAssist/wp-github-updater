@@ -672,7 +672,8 @@ class Updater
 
         return new \WP_Error(
             "temp_file_creation_failed",
-            $this->config->__("Could not create temporary file. Please check directory permissions or define WP_TEMP_DIR in wp-config.php")
+            $this->config->__("Could not create temporary file. Please check directory permissions " .
+                "or define WP_TEMP_DIR in wp-config.php")
         );
     }
 
