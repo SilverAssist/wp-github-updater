@@ -30,11 +30,19 @@ add_action("init", function() {
             "asset_pattern" => "silver-assist-security-v{version}.zip",
             "ajax_action" => "silver_assist_security_check_version",
             "ajax_nonce" => "silver_assist_security_ajax",
-            "text_domain" => "silver-assist-security" // Your plugin's text domain
+            "text_domain" => "silver-assist-security", // Your plugin's text domain
+            "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Enhanced error handling (v1.1.3+)
         ]
     );
     
-    new Updater($config);
+    $updater = new Updater($config);
+    
+    // Optional: Programmatic version checking (v1.1.2+)
+    if ($updater->isUpdateAvailable()) {
+        // Handle update availability programmatically
+        $latestVersion = $updater->getLatestVersion();
+        error_log("Security plugin update available: " . $latestVersion);
+    }
 });
 */
 
@@ -59,11 +67,19 @@ add_action("init", function() {
             "asset_pattern" => "leadgen-app-form-v{version}.zip",
             "ajax_action" => "leadgen_check_version",
             "ajax_nonce" => "leadgen_version_check",
-            "text_domain" => "leadgen-app-form" // Your plugin's text domain
+            "text_domain" => "leadgen-app-form", // Your plugin's text domain
+            "custom_temp_dir" => wp_upload_dir()["basedir"] . "/temp", // Alternative temp dir location
         ]
     );
     
-    new Updater($config);
+    $updater = new Updater($config);
+    
+    // Optional: Add manual check button in admin
+    add_action("admin_init", function() use ($updater) {
+        if (isset($_GET["leadgen_check_update"]) && current_user_can("update_plugins")) {
+            $updater->manualVersionCheck();
+        }
+    });
 });
 */
 
@@ -102,11 +118,26 @@ add_action("init", function() {
             "requires_wordpress" => "6.2",
             "ajax_action" => "my_plugin_version_check",
             "cache_duration" => 6 * 3600, // 6 hours
-            "text_domain" => "my-new-plugin" // Your plugin's text domain
+            "text_domain" => "my-new-plugin", // Your plugin's text domain
+            "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Improved hosting compatibility
         ]
     );
     
-    new Updater($config);
+    $updater = new Updater($config);
+    
+    // Example: Check for updates programmatically
+    add_action("admin_notices", function() use ($updater) {
+        if (!current_user_can("update_plugins")) return;
+        
+        if ($updater->isUpdateAvailable()) {
+            $currentVersion = $updater->getCurrentVersion();
+            $latestVersion = $updater->getLatestVersion();
+            
+            echo '<div class="notice notice-info">';
+            echo '<p>My Plugin: Update available from ' . esc_html($currentVersion) . ' to ' . esc_html($latestVersion) . '</p>';
+            echo '</div>';
+        }
+    });
 });
 
 // Your plugin code here...
@@ -167,4 +198,23 @@ define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
  * 3. Replace your existing updater code with the examples above
  * 4. Remove your old updater class files
  * 5. Test the updates
+ */
+
+/**
+ * New Features in v1.1.4:
+ *
+ * - WordPress admin notices for manual version checks
+ * - Dismissible admin notices with AJAX functionality
+ * - Improved code organization with isUpdateAvailable() method
+ *
+ * New Features in v1.1.3:
+ *
+ * - Enhanced temporary file handling to resolve PCLZIP errors
+ * - Better error handling and hosting environment compatibility
+ *
+ * Public API methods (v1.1.2+):
+ * - $updater->isUpdateAvailable() - Check if update is available
+ * - $updater->getCurrentVersion() - Get current plugin version
+ * - $updater->getLatestVersion() - Get latest GitHub version
+ * - $updater->getGithubRepo() - Get repository name
  */

@@ -14,6 +14,9 @@ A reusable WordPress plugin updater that handles automatic updates from public G
 - 🛡️ **Security**: AJAX nonce verification and capability checks
 - 🔧 **Configurable**: Flexible configuration options
 - 📦 **Easy Integration**: Simple Composer installation
+- 📢 **Admin Notices**: WordPress admin notifications for available updates
+- 🗂️ **Enhanced File Handling**: Multi-tier temporary file creation to resolve hosting issues
+- ✅ **Manual Version Checks**: AJAX-powered manual update checking with immediate admin feedback
 
 ## Installation
 
@@ -64,7 +67,9 @@ $config = new UpdaterConfig(
         'asset_pattern' => '{slug}-v{version}.zip', // GitHub release asset filename
         'cache_duration' => 12 * 3600, // 12 hours in seconds
         'ajax_action' => 'my_plugin_check_version',
-        'ajax_nonce' => 'my_plugin_version_nonce'
+        'ajax_nonce' => 'my_plugin_version_nonce',
+        'text_domain' => 'my-plugin-textdomain', // For internationalization
+        'custom_temp_dir' => WP_CONTENT_DIR . '/temp', // Custom temporary directory (v1.1.3+)
     ]
 );
 
@@ -328,6 +333,38 @@ composer phpstan
 ```bash
 composer check
 ```
+
+## Public API Methods
+
+The updater provides several public methods for programmatic access:
+
+### Version Information
+
+```php
+// Check if an update is available
+$hasUpdate = $updater->isUpdateAvailable(); // Returns bool
+
+// Get the current plugin version
+$currentVersion = $updater->getCurrentVersion(); // Returns string
+
+// Get the latest version from GitHub (with caching)
+$latestVersion = $updater->getLatestVersion(); // Returns string|false
+
+// Get the GitHub repository
+$repo = $updater->getGithubRepo(); // Returns string
+```
+
+### Manual Version Check
+
+You can trigger a manual version check programmatically:
+
+```php
+// This will clear caches and check for updates
+// If an update is available, it will set an admin notice
+$updater->manualVersionCheck();
+```
+
+**Note**: The manual version check method is designed for AJAX calls and will send JSON responses. For programmatic use, prefer the individual methods above.
 
 ## Contributing
 

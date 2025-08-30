@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.3
+ * @version 1.1.4
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -115,6 +115,12 @@ class Updater
 
         // Add AJAX action for manual version check
         \add_action("wp_ajax_{$this->config->ajaxAction}", [$this, "manualVersionCheck"]);
+
+        // Add AJAX action for dismissing update notices
+        \add_action("wp_ajax_{$this->config->ajaxAction}_dismiss_notice", [$this, "dismissUpdateNotice"]);
+
+        // Add admin notice for manual version checks
+        \add_action("admin_notices", [$this, "showUpdateNotice"]);
     }
 
     /**
@@ -136,7 +142,7 @@ class Updater
 
         $latestVersion = $this->getLatestVersion();
 
-        if ($latestVersion && version_compare($this->currentVersion, $latestVersion, "<")) {
+        if ($this->isUpdateAvailable()) {
             $transient->response[$this->pluginSlug] = (object) [
                 "slug" => $this->pluginBasename,
                 "plugin" => $this->pluginSlug,
@@ -418,14 +424,31 @@ class Updater
         }
 
         try {
+            // Clear our version cache
             \delete_transient($this->versionTransient);
+
+            // Clear WordPress update cache to force refresh
+            \delete_site_transient("update_plugins");
+
             $latestVersion = $this->getLatestVersion();
+            $updateAvailable = $this->isUpdateAvailable();
+
+            // If update is available, set a transient to show admin notice
+            if ($updateAvailable) {
+                \set_transient("wp_github_updater_notice_{$this->pluginBasename}", [
+                    "plugin_name" => $this->config->pluginName,
+                    "current_version" => $this->currentVersion,
+                    "latest_version" => $latestVersion,
+                    "github_repo" => $this->config->githubRepo,
+                ], $this->config->cacheDuration); // Use same duration as version cache
+            }
 
             \wp_send_json_success([
                 "current_version" => $this->currentVersion,
                 "latest_version" => $latestVersion ?: $this->config->__("Unknown"),
-                "update_available" => $latestVersion && version_compare($this->currentVersion, $latestVersion, "<"),
+                "update_available" => $updateAvailable,
                 "github_repo" => $this->config->githubRepo,
+                "notice_set" => $updateAvailable, // Indicate if notice was set
             ]);
         } catch (\Exception $e) {
             \wp_send_json_error([
@@ -433,6 +456,99 @@ class Updater
                 "code" => "version_check_failed"
             ]);
         }
+    }
+
+    /**
+     * Handle dismissal of update notices via AJAX
+     *
+     * @since 1.1.4
+     * @return void
+     */
+    public function dismissUpdateNotice(): void
+    {
+        // Check nonce
+        $nonce = \sanitize_text_field(\wp_unslash($_POST["nonce"] ?? ""));
+        if (!\wp_verify_nonce($nonce, $this->config->ajaxNonce)) {
+            \wp_die("Security verification failed", "Error", ["response" => 403]);
+        }
+
+        // Check capabilities
+        if (!\current_user_can("update_plugins")) {
+            \wp_die("Insufficient permissions", "Error", ["response" => 403]);
+        }
+
+        // Delete the notice transient
+        $noticeKey = "wp_github_updater_notice_{$this->pluginBasename}";
+        \delete_transient($noticeKey);
+
+        \wp_send_json_success(["message" => "Notice dismissed successfully"]);
+    }
+
+    /**
+     * Show admin notice for available updates
+     *
+     * Displays a WordPress admin notice when an update is available
+     * after a manual version check.
+     *
+     * @since 1.1.4
+     */
+    public function showUpdateNotice(): void
+    {
+        // Only show on admin pages
+        if (!is_admin()) {
+            return;
+        }
+
+        // Check if we have a notice to show
+        $notice_data = \get_transient("wp_github_updater_notice_{$this->pluginBasename}");
+        if (!$notice_data) {
+            return;
+        }
+
+        // Only show to users who can update plugins
+        if (!\current_user_can("update_plugins")) {
+            return;
+        }
+
+        $plugin_name = $notice_data["plugin_name"] ?? $this->config->pluginName;
+        $current_version = $notice_data["current_version"] ?? $this->currentVersion;
+        $latest_version = $notice_data["latest_version"] ?? "Unknown";
+        $github_repo = $notice_data["github_repo"] ?? $this->config->githubRepo;
+
+        $updates_url = \admin_url("plugins.php?plugin_status=upgrade");
+        $github_url = "https://github.com/{$github_repo}/releases/latest";
+
+        echo '<div class="notice notice-warning is-dismissible" data-notice="wp-github-updater-' .
+            \esc_attr($this->pluginBasename) . '">';
+        echo '<p>';
+        echo '<strong>' . \esc_html($plugin_name) . '</strong> ';
+        echo sprintf(
+            \esc_html($this->config->__("has a new version available: %1\$s (you have %2\$s).")),
+            '<strong>' . \esc_html($latest_version) . '</strong>',
+            \esc_html($current_version)
+        );
+        echo '</p>';
+        echo '<p>';
+        echo '<a href="' . \esc_url($updates_url) . '" class="button button-primary">' .
+            \esc_html($this->config->__("View Updates")) . '</a> ';
+        echo '<a href="' . \esc_url($github_url) . '" class="button" target="_blank">' .
+            \esc_html($this->config->__("View Release Notes")) . '</a>';
+        echo '</p>';
+        echo '</div>';
+
+        // Add JavaScript to handle dismissal
+        echo '<script>
+        jQuery(document).ready(function($) {
+            $(document).on("click", "[data-notice=\"wp-github-updater-' .
+            \esc_js($this->pluginBasename) . '\"] .notice-dismiss", function() {
+                $.post(ajaxurl, {
+                    action: "' . \esc_js($this->config->ajaxAction) . '_dismiss_notice",
+                    nonce: "' . \esc_js(\wp_create_nonce($this->config->ajaxNonce)) . '",
+                    plugin: "' . \esc_js($this->pluginBasename) . '"
+                });
+            });
+        });
+        </script>';
     }
 
     /**
@@ -604,7 +720,7 @@ class Updater
      * @param string $package The package URL being downloaded
      * @return string|\WP_Error Path to temporary file or WP_Error on failure
      *
-     * @since 1.1.3
+     * @since 1.1.4
      */
     private function createSecureTempFile(string $package): string|\WP_Error
     {

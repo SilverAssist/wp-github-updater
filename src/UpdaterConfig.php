@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.3
+ * @version 1.1.4
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -186,7 +186,7 @@ class UpdaterConfig
      */
     private function getPluginData(string $pluginFile): array
     {
-        if (\function_exists("get_plugin_data")) {
+        if (function_exists("get_plugin_data")) {
             return \get_plugin_data($pluginFile);
         }
 

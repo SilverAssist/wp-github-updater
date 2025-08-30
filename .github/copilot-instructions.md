@@ -53,9 +53,11 @@ wp-github-updater/
 - GitHub API communication with caching
 - Plugin update checking and information display
 - Download error handling and recovery
-- AJAX endpoints for manual update checks
+- AJAX endpoints for manual update checks and notice dismissal
 - Markdown-to-HTML conversion for changelogs
 - **Enhanced temporary file management with PCLZIP error resolution** (v1.1.3+)
+- **WordPress admin notices for manual update checks** (v1.1.3+)
+- **Dismissible admin notices with AJAX handling** (v1.1.4+)
 
 ### Security
 - **Nonce verification** for AJAX requests
@@ -167,11 +169,23 @@ class Updater {
     }
 
     public function checkForUpdate($transient) {
-        // WordPress update check integration
+        // WordPress update check integration using isUpdateAvailable() method
     }
 
     public function pluginInfo($result, string $action, object $args) {
         // Plugin information display
+    }
+
+    public function manualVersionCheck(): void {
+        // AJAX handler for manual version checks with admin notice creation
+    }
+
+    public function dismissUpdateNotice(): void {
+        // AJAX handler for dismissing admin notices (v1.1.4+)
+    }
+
+    public function showUpdateNotice(): void {
+        // WordPress admin notice display for available updates (v1.1.4+)
     }
 
     public function maybeFixDownload($result, string $package, object $upgrader, array $hook_extra) {
@@ -180,6 +194,10 @@ class Updater {
 
     private function createSecureTempFile(string $package) {
         // Multi-tier temporary file creation with fallback strategies (v1.1.3+)
+    }
+
+    public function isUpdateAvailable(): bool {
+        // Centralized update availability check (refactored in v1.1.4+)
     }
 
     public function getLatestVersion(): string|false {

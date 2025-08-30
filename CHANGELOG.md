@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.1.4] - 2025-08-29
+### Added
+- **WordPress Admin Notices**: Integrated admin notification system that displays update availability after manual version checks
+- **Dismissible Update Notices**: Users can dismiss update notifications with built-in AJAX functionality
+- **Admin Notice Management**: New `showUpdateNotice()` method creates WordPress-compliant admin notices with proper styling
+- **AJAX Notice Dismissal**: New `dismissUpdateNotice()` AJAX handler for seamless notice management
+- **Transient-Based Notifications**: Update notices persist for the same duration as version cache (configurable via `cache_duration`)
+
+### Changed
+- **Improved Manual Version Checks**: Enhanced `manualVersionCheck()` method now sets admin notices for immediate user feedback
+- **Code Refactoring**: Centralized update availability logic using `isUpdateAvailable()` method to eliminate code duplication
+- **Better WordPress Integration**: Manual version checks now properly clear WordPress update transients for immediate admin interface updates
+- **Enhanced User Experience**: Update checks provide both AJAX responses and persistent admin notifications
+
+### Fixed
+- **WordPress Admin Sync**: Manual version checks now immediately reflect in WordPress admin plugins page
+- **Transient Cache Management**: Proper clearing of both plugin-specific and WordPress update caches
+- **Admin Interface Updates**: Resolved disconnect between manual checks and WordPress admin display
+
+### Technical Improvements
+- **DRY Principle**: Replaced duplicate version comparison logic with centralized `isUpdateAvailable()` method calls
+- **AJAX Security**: Enhanced nonce verification and sanitization for all AJAX endpoints
+- **WordPress Standards**: All admin notices follow WordPress UI/UX guidelines with proper escaping and styling
+- **JavaScript Integration**: Inline JavaScript for notice dismissal with jQuery compatibility
+
+### Documentation
+- **API Documentation**: Added comprehensive Public API Methods section to README
+- **Integration Examples**: Updated all examples to demonstrate new admin notice features
+- **Configuration Guide**: Enhanced advanced configuration examples with new capabilities
+- **Code Examples**: Programmatic version checking examples for developers
+
 ## [1.1.3] - 2025-08-29
 ### Added
 - **Enhanced Temporary File Handling**: Implemented multiple fallback strategies for temporary file creation to resolve `PCLZIP_ERR_MISSING_FILE (-4)` errors
