@@ -86,6 +86,7 @@ $updater = new Updater($config);
 | `ajax_action` | string | `'check_plugin_version'` | AJAX action name for manual checks |
 | `ajax_nonce` | string | `'plugin_version_check'` | AJAX nonce name |
 | `text_domain` | string | `'wp-github-updater'` | WordPress text domain for i18n **(New in 1.1.0)** |
+| `custom_temp_dir` | string\|null | `null` | Custom temporary directory path **(New in 1.1.3)** |
 
 ### Internationalization Support (i18n)
 
@@ -185,6 +186,66 @@ add_action('init', function() {
 // Your plugin code here...
 ```
 
+## Troubleshooting
+
+### PCLZIP_ERR_MISSING_FILE (-4) Error
+
+If you encounter the error "The package could not be installed. PCLZIP_ERR_MISSING_FILE (-4)", this typically indicates issues with the temporary directory. The updater includes multiple fallback strategies to resolve this.
+
+#### Solution 1: Custom Temporary Directory (Recommended)
+
+```php
+$config = new UpdaterConfig(
+    __FILE__,
+    'your-username/your-repo',
+    [
+        'custom_temp_dir' => WP_CONTENT_DIR . '/temp',
+        // or use uploads directory:
+        // 'custom_temp_dir' => wp_upload_dir()['basedir'] . '/temp',
+    ]
+);
+```
+
+#### Solution 2: WordPress Configuration
+
+Add to your `wp-config.php` file (before "That's all, stop editing!"):
+
+```php
+/* Set WordPress temporary directory */
+define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
+```
+
+Then create the directory with proper permissions:
+
+```bash
+mkdir wp-content/temp
+chmod 755 wp-content/temp
+```
+
+#### Solution 3: Plugin Activation Hook
+
+Create the temporary directory when your plugin is activated:
+
+```php
+register_activation_hook(__FILE__, function() {
+    $temp_dir = WP_CONTENT_DIR . '/temp';
+    if (!file_exists($temp_dir)) {
+        wp_mkdir_p($temp_dir);
+    }
+});
+```
+
+### Multi-Tier Fallback System
+
+The updater automatically tries multiple strategies for temporary file creation:
+
+1. **Custom temporary directory** (if configured)
+2. **WordPress uploads directory** 
+3. **WP_CONTENT_DIR/temp** (auto-created)
+4. **WP_TEMP_DIR** (if defined in wp-config.php)
+5. **System temporary directory** (/tmp)
+6. **Manual file creation** (last resort)
+
 ## Requirements
 
 - PHP 8.0 or higher
@@ -193,6 +254,55 @@ add_action('init', function() {
 - Public GitHub repository with releases
 
 ## Development
+
+### Testing Configuration
+
+The package includes comprehensive testing for various scenarios including PCLZIP error handling and temporary file management.
+
+#### Test Environment Setup
+
+```bash
+# Install development dependencies
+composer install --dev
+
+# Run all tests
+composer test
+
+# Run tests with coverage
+vendor/bin/phpunit --coverage-text
+```
+
+#### Testing PCLZIP Error Scenarios
+
+For testing plugins that may experience `PCLZIP_ERR_MISSING_FILE (-4)` errors, configure a custom temporary directory:
+
+```php
+// Test configuration for PCLZIP error handling
+$config = new UpdaterConfig(
+    __FILE__,
+    "your-username/your-plugin",
+    [
+        "text_domain" => "your-plugin",
+        "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Custom temp directory
+        // Alternative: use uploads directory
+        // "custom_temp_dir" => wp_upload_dir()["basedir"] . "/temp",
+    ]
+);
+```
+
+#### WordPress Configuration for Testing
+
+Add to your test `wp-config.php`:
+
+```php
+// Define custom temporary directory for testing
+define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
+
+// Ensure directory exists with proper permissions
+if (!file_exists(WP_TEMP_DIR)) {
+    wp_mkdir_p(WP_TEMP_DIR);
+}
+```
 
 ### Running Tests
 
