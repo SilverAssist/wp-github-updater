@@ -127,7 +127,7 @@ El mock plugin tiene su propia suite de tests en `tests/WordPress/MockPluginTest
 ### 1. Instalar WordPress Test Suite
 
 ```bash
-./bin/install-wp-tests.sh wordpress_test root '' localhost 6.7.1
+./scripts/install-wp-tests.sh wordpress_test root '' localhost 6.7.1
 ```
 
 ### 2. Ejecutar Tests de WordPress

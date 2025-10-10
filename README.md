@@ -279,10 +279,10 @@ composer install --dev
 composer test
 
 # Run specific test suites
-./bin/test-runner.sh unit         # Unit tests only
-./bin/test-runner.sh integration  # Integration tests (includes real GitHub API)
-./bin/test-runner.sh wordpress    # WordPress integration tests
-./bin/test-runner.sh all          # All tests
+./scripts/test-runner.sh unit         # Unit tests only
+./scripts/test-runner.sh integration  # Integration tests (includes real GitHub API)
+./scripts/test-runner.sh wordpress    # WordPress integration tests
+./scripts/test-runner.sh all          # All tests
 
 # Run with coverage
 vendor/bin/phpunit --coverage-text
@@ -322,10 +322,10 @@ The tests use WordPress Test Suite for authentic WordPress integration:
 
 ```bash
 # Install WordPress Test Suite (interactive)
-./bin/test-runner.sh install
+./scripts/test-runner.sh install
 
 # Or manual installation
-./bin/install-wp-tests.sh wordpress_test root '' localhost latest
+./scripts/install-wp-tests.sh wordpress_test root '' localhost latest
 ```
 
 **PCLZIP Error Testing:**

@@ -38,10 +38,10 @@ install_wp_tests() {
     echo "To run WordPress integration tests, you need to install WordPress Test Suite."
     echo ""
     echo -e "${GREEN}Installation command:${NC}"
-    echo "  ./bin/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]"
+    echo "  ./scripts/install-wp-tests.sh <db-name> <db-user> <db-pass> [db-host] [wp-version]"
     echo ""
     echo -e "${GREEN}Example:${NC}"
-    echo "  ./bin/install-wp-tests.sh wordpress_test root '' localhost 6.7.1"
+    echo "  ./scripts/install-wp-tests.sh wordpress_test root '' localhost 6.7.1"
     echo ""
     read -p "Do you want to install now? (y/N) " -n 1 -r
     echo
@@ -66,7 +66,7 @@ install_wp_tests() {
         
         echo ""
         echo -e "${BLUE}Installing WordPress Test Suite...${NC}"
-        "$PROJECT_ROOT/bin/install-wp-tests.sh" "$db_name" "$db_user" "$db_pass" "$db_host" "$wp_version"
+        "$PROJECT_ROOT/scripts/install-wp-tests.sh" "$db_name" "$db_user" "$db_pass" "$db_host" "$wp_version"
         
         if [ $? -eq 0 ]; then
             echo ""
