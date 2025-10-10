@@ -7,11 +7,13 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.1.4
+ * @version 1.1.5
  * @license PolyForm-Noncommercial-1.0.0
  */
 
 namespace SilverAssist\WpGithubUpdater;
+
+use WP_Error;
 
 /**
  * Main updater class that handles plugin updates from GitHub releases
@@ -647,24 +649,61 @@ class Updater
     /**
      * Maybe fix download issues by providing better HTTP args
      *
-     * @return boolean|\WP_Error $result
+     * This filter intercepts the download process for our GitHub releases
+     * to ensure proper temporary file handling and avoid PCLZIP errors.
+     *
+     * CRITICAL: This filter MUST return one of:
+     * - false (or WP_Error): Let WordPress handle the download normally
+     * - string: Path to an already-downloaded file for WordPress to use
+     * - NEVER return true or any other type!
+     *
+     * @param boolean|WP_Error $result   The result from previous filters
+     * @param string            $package  The package URL being downloaded
+     * @param object            $upgrader The WP_Upgrader instance
+     * @param array             $hook_extra Extra hook data
+     * @return string|WP_Error|false Path to downloaded file, WP_Error on failure, or false to continue
      *
      * @since 1.1.0
      */
     public function maybeFixDownload(
-        bool|\WP_Error $result,
+        bool|WP_Error $result,
         string $package,
         object $upgrader,
         array $hook_extra
-    ): bool|\WP_Error {
-        // Only handle GitHub downloads for our plugin
-        if (!str_contains($package, "github.com") || !str_contains($package, $this->config->githubRepo)) {
+    ): string|WP_Error|false {
+        // If a previous filter already handled this, respect that decision
+        if (\is_wp_error($result)) {
             return $result;
         }
 
-        // Use wp_remote_get with better parameters
+        // Only handle GitHub downloads for our specific repository
+        if (
+            empty($package) ||
+            !str_contains($package, "github.com") ||
+            !str_contains($package, $this->config->githubRepo)
+        ) {
+            return false; // Let WordPress handle it normally
+        }
+
+        // Additional safety check: ensure this is actually for our plugin
+        $is_our_plugin = false;
+        if (isset($hook_extra["plugin"]) && $hook_extra["plugin"] === $this->pluginSlug) {
+            $is_our_plugin = true;
+        } elseif (
+            isset($hook_extra["plugins"]) &&
+            is_array($hook_extra["plugins"]) &&
+            in_array($this->pluginSlug, $hook_extra["plugins"])
+        ) {
+            $is_our_plugin = true;
+        }
+
+        if (!$is_our_plugin) {
+            return false; // Not our plugin, let WordPress handle it
+        }
+
+        // Download the package with optimized settings
         $args = [
-            "timeout" => 300, // 5 minutes
+            "timeout" => 300, // 5 minutes for large files
             "headers" => $this->getDownloadHeaders(),
             "sslverify" => true,
             "stream" => false,
@@ -674,40 +713,98 @@ class Updater
         $response = \wp_remote_get($package, $args);
 
         if (\is_wp_error($response)) {
-            return $response;
+            return new WP_Error(
+                "download_failed",
+                sprintf(
+                    $this->config->__("Failed to download package: %s"),
+                    $response->get_error_message()
+                )
+            );
         }
 
-        if (200 !== \wp_remote_retrieve_response_code($response)) {
-            return new \WP_Error("http_404", $this->config->__("Package not found"));
+        $response_code = \wp_remote_retrieve_response_code($response);
+        if (200 !== $response_code) {
+            return new WP_Error(
+                "http_error",
+                sprintf(
+                    $this->config->__("Package download failed with HTTP code %d"),
+                    $response_code
+                )
+            );
         }
 
-        // Try multiple approaches for creating temporary file to avoid PCLZIP errors
+        // Get the response body
+        $body = \wp_remote_retrieve_body($response);
+        if (empty($body)) {
+            return new WP_Error(
+                "empty_response",
+                $this->config->__("Downloaded package is empty")
+            );
+        }
+
+        // Create temporary file with our multi-tier fallback system
         $temp_file = $this->createSecureTempFile($package);
 
         if (\is_wp_error($temp_file)) {
             return $temp_file;
         }
 
+        // Write the downloaded content to the temporary file
         $file_handle = @fopen($temp_file, "wb");
         if (!$file_handle) {
-            return new \WP_Error("file_open_failed", $this->config->__("Could not open file for writing"));
+            @unlink($temp_file); // Clean up if file was created but can't be opened
+            return new WP_Error(
+                "file_open_failed",
+                sprintf(
+                    $this->config->__("Could not open temporary file for writing: %s"),
+                    $temp_file
+                )
+            );
         }
 
-        $body = \wp_remote_retrieve_body($response);
         $bytes_written = fwrite($file_handle, $body);
         fclose($file_handle);
 
-        // Verify file was written correctly
+        // Verify write operation succeeded
         if ($bytes_written === false || $bytes_written !== strlen($body)) {
             @unlink($temp_file);
-            return new \WP_Error("file_write_failed", $this->config->__("Could not write to temporary file"));
+            return new WP_Error(
+                "file_write_failed",
+                $this->config->__("Failed to write complete package to temporary file")
+            );
         }
 
-        // Verify file exists and is readable
-        if (!file_exists($temp_file) || !is_readable($temp_file)) {
-            return new \WP_Error("file_verification_failed", $this->config->__("Temporary file verification failed"));
+        // Final verification: ensure file exists and is readable
+        if (!file_exists($temp_file)) {
+            return new WP_Error(
+                "file_missing",
+                $this->config->__("Temporary file disappeared after creation")
+            );
         }
 
+        if (!is_readable($temp_file)) {
+            @unlink($temp_file);
+            return new WP_Error(
+                "file_not_readable",
+                $this->config->__("Temporary file is not readable")
+            );
+        }
+
+        // Verify it's actually a zip file
+        $file_size = filesize($temp_file);
+        if ($file_size < 100) { // Minimum size for a valid zip
+            @unlink($temp_file);
+            return new WP_Error(
+                "invalid_package",
+                sprintf(
+                    $this->config->__("Downloaded file is too small (%d bytes) to be a valid package"),
+                    $file_size
+                )
+            );
+        }
+
+        // SUCCESS: Return the path to the downloaded file
+        // WordPress will use this file for extraction
         return $temp_file;
     }
 
@@ -718,11 +815,11 @@ class Updater
      * that can occur with restrictive /tmp directory permissions.
      *
      * @param string $package The package URL being downloaded
-     * @return string|\WP_Error Path to temporary file or WP_Error on failure
+     * @return string|WP_Error Path to temporary file or WP_Error on failure
      *
      * @since 1.1.4
      */
-    private function createSecureTempFile(string $package): string|\WP_Error
+    private function createSecureTempFile(string $package): string|WP_Error
     {
         $filename = basename(parse_url($package, PHP_URL_PATH)) ?: "github-package.zip";
 
@@ -786,7 +883,7 @@ class Updater
             }
         }
 
-        return new \WP_Error(
+        return new WP_Error(
             "temp_file_creation_failed",
             $this->config->__("Could not create temporary file. Please check directory permissions " .
                 "or define WP_TEMP_DIR in wp-config.php")

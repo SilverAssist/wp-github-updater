@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.1.5] - 2025-10-10
+### Fixed
+- **PCLZIP_ERR_MISSING_FILE (-4) Resolution**: Complete rewrite of `upgrader_pre_download` filter to properly handle all download scenarios
+- **Download Filter Return Values**: Fixed critical issue where filter could return invalid types causing WordPress to fail with PCLZIP errors
+- **Better Plugin Detection**: Added robust verification to ensure filter only intercepts downloads for the correct plugin
+- **Enhanced Error Handling**: Comprehensive error messages for all failure points in the download process
+- **File Verification**: Added multiple validation checks (file size, readability, existence) before returning downloaded file to WordPress
+
+### Changed
+- **Stricter Filter Logic**: `maybeFixDownload()` now returns `false` to let WordPress handle downloads that aren't for our plugin
+- **Safety Checks**: Added verification of `hook_extra` data to ensure we only process downloads for our specific plugin
+- **Improved Documentation**: Enhanced PHPDoc comments explaining critical return value requirements for WordPress compatibility
+- **Download Process**: Better handling of HTTP response codes and empty responses with descriptive error messages
+
+### Technical Improvements
+- **Return Type Enforcement**: Strict enforcement of `string|WP_Error|false` return types (never `true` or other types)
+- **Multi-line Conditionals**: Improved code formatting to meet WordPress Coding Standards (120 character line limit)
+- **Defensive Programming**: Added early returns for edge cases where previous filters have already handled the download
+- **Minimum File Size Check**: Validates downloaded file is at least 100 bytes before considering it valid
+
 ## [1.1.4] - 2025-08-29
 ### Added
 - **WordPress Admin Notices**: Integrated admin notification system that displays update availability after manual version checks
