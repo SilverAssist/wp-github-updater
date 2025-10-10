@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] - 2025-10-10
 
 ### Changed
 - **Documentation Consolidation**: Centralized all documentation into README.md, CHANGELOG.md, and .github/copilot-instructions.md
