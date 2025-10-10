@@ -1,9 +1,16 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
 parameters:
     level: 8
     paths:
         - src
     excludePaths:
         - tests
+    bootstrapFiles:
+        - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+    scanDirectories:
+        - vendor/php-stubs/wordpress-stubs
     ignoreErrors:
-        # WordPress functions are not available during static analysis
-        - '#Call to unknown function: [\\]?[a-zA-Z_]+#'
+        # Ignore WP_Error union type issues in some contexts
+        - '#Cannot call method get_error_message\(\) on string\|WP_Error\|false#'

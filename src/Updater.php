@@ -14,6 +14,7 @@
 namespace SilverAssist\WpGithubUpdater;
 
 use WP_Error;
+use WP_Upgrader;
 
 /**
  * Main updater class that handles plugin updates from GitHub releases
@@ -392,10 +393,10 @@ class Updater
     /**
      * Clear version cache after update
      *
-     * @param \WP_Upgrader $upgrader WP_Upgrader instance
+     * @param WP_Upgrader $upgrader WP_Upgrader instance
      * @param array        $data     Array of update data
      */
-    public function clearVersionCache(\WP_Upgrader $upgrader, array $data): void
+    public function clearVersionCache(WP_Upgrader $upgrader, array $data): void
     {
         if ($data["action"] === "update" && $data["type"] === "plugin") {
             if (isset($data["plugins"]) && in_array($this->pluginSlug, $data["plugins"])) {

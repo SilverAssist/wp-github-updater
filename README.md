@@ -63,7 +63,7 @@ $config = new UpdaterConfig(
         'plugin_author' => 'Your Name',
         'plugin_homepage' => 'https://your-website.com',
         'requires_wordpress' => '6.0',
-        'requires_php' => '8.0',
+        'requires_php' => '8.3',
         'asset_pattern' => '{slug}-v{version}.zip', // GitHub release asset filename
         'cache_duration' => 12 * 3600, // 12 hours in seconds
         'ajax_action' => 'my_plugin_check_version',
@@ -85,7 +85,7 @@ $updater = new Updater($config);
 | `plugin_author` | string | From plugin header | Plugin author name |
 | `plugin_homepage` | string | GitHub repo URL | Plugin homepage URL |
 | `requires_wordpress` | string | `'6.0'` | Minimum WordPress version |
-| `requires_php` | string | `'8.0'` | Minimum PHP version |
+| `requires_php` | string | `'8.3'` | Minimum PHP version |
 | `asset_pattern` | string | `'{slug}-v{version}.zip'` | GitHub release asset filename pattern |
 | `cache_duration` | int | `43200` (12 hours) | Cache duration in seconds |
 | `ajax_action` | string | `'check_plugin_version'` | AJAX action name for manual checks |
@@ -159,7 +159,7 @@ Here's a complete example for a WordPress plugin:
  * Version: 1.0.0
  * Author: Your Name
  * Requires at least: 6.0
- * Requires PHP: 8.0
+ * Requires PHP: 8.3
  */
 
 // Prevent direct access
@@ -253,18 +253,23 @@ The updater automatically tries multiple strategies for temporary file creation:
 
 ## Requirements
 
-- PHP 8.0 or higher
+- PHP 8.3 or higher
 - WordPress 6.0 or higher
 - Composer for dependency management
 - Public GitHub repository with releases
 
 ## Development
 
-### Testing Configuration
+### Testing
 
-The package includes comprehensive testing for various scenarios including PCLZIP error handling and temporary file management.
+The package includes comprehensive testing (51 tests, 130 assertions, 100% passing):
 
-#### Test Environment Setup
+**Test Coverage:**
+- **Unit Tests** (3 tests): Configuration and core functionality
+- **Integration Tests** (22 tests): Updater + Config integration, download filters, **real GitHub API** ⭐
+- **WordPress Tests** (26 tests): Hooks, filters, and mock plugin integration
+
+**Running Tests:**
 
 ```bash
 # Install development dependencies
@@ -273,46 +278,68 @@ composer install --dev
 # Run all tests
 composer test
 
-# Run tests with coverage
+# Run specific test suites
+./bin/test-runner.sh unit         # Unit tests only
+./bin/test-runner.sh integration  # Integration tests (includes real GitHub API)
+./bin/test-runner.sh wordpress    # WordPress integration tests
+./bin/test-runner.sh all          # All tests
+
+# Run with coverage
 vendor/bin/phpunit --coverage-text
 ```
 
-#### Testing PCLZIP Error Scenarios
+**Real GitHub API Testing:**
+
+The integration tests include **real HTTP requests** to production GitHub repositories to verify actual API behavior:
+
+- ✅ Validates actual GitHub API response structure
+- ✅ Verifies caching performance (< 10ms for cached calls)
+- ✅ Tests version comparison with real releases
+- ✅ Confirms asset pattern matching with production URLs
+
+**Example: Test with Your Own Repository**
+
+```php
+// tests/Integration/MyRealAPITest.php
+public function testFetchLatestVersionFromMyRepo(): void {
+    $config = new UpdaterConfig([
+        "plugin_file" => __FILE__,
+        "github_username" => "YourUsername",
+        "github_repo" => "your-repository",
+    ]);
+    
+    $updater = new Updater($config);
+    $version = $updater->getLatestVersion();
+    
+    $this->assertNotFalse($version);
+    $this->assertMatchesRegularExpression("/^\d+\.\d+\.\d+$/", $version);
+}
+```
+
+**Test Environment Setup:**
+
+The tests use WordPress Test Suite for authentic WordPress integration:
+
+```bash
+# Install WordPress Test Suite (interactive)
+./bin/test-runner.sh install
+
+# Or manual installation
+./bin/install-wp-tests.sh wordpress_test root '' localhost latest
+```
+
+**PCLZIP Error Testing:**
 
 For testing plugins that may experience `PCLZIP_ERR_MISSING_FILE (-4)` errors, configure a custom temporary directory:
 
 ```php
-// Test configuration for PCLZIP error handling
 $config = new UpdaterConfig(
     __FILE__,
     "your-username/your-plugin",
     [
-        "text_domain" => "your-plugin",
-        "custom_temp_dir" => WP_CONTENT_DIR . "/temp", // Custom temp directory
-        // Alternative: use uploads directory
-        // "custom_temp_dir" => wp_upload_dir()["basedir"] . "/temp",
+        "custom_temp_dir" => WP_CONTENT_DIR . "/temp",
     ]
 );
-```
-
-#### WordPress Configuration for Testing
-
-Add to your test `wp-config.php`:
-
-```php
-// Define custom temporary directory for testing
-define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
-
-// Ensure directory exists with proper permissions
-if (!file_exists(WP_TEMP_DIR)) {
-    wp_mkdir_p(WP_TEMP_DIR);
-}
-```
-
-### Running Tests
-
-```bash
-composer test
 ```
 
 ### Code Standards

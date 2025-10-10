@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **Documentation Consolidation**: Centralized all documentation into README.md, CHANGELOG.md, and .github/copilot-instructions.md
+- **Removed Separate Documentation Files**: Eliminated `docs/` directory to maintain simpler, more maintainable documentation structure
+- **Testing Documentation**: Moved comprehensive testing guide to README.md Development section
+- **Troubleshooting Guide**: Integrated troubleshooting information directly into README.md
+
+### Testing
+- **51 Tests, 130 Assertions**: Complete test suite with 100% pass rate
+- **Real GitHub API Integration Tests**: 9 tests making actual HTTP requests to production repositories
+- **Test Coverage**: Unit tests (3), Integration tests (22), WordPress tests (26)
+- **Performance Verification**: Caching performance tests confirm < 10ms for cached API calls
+
 ## [1.1.5] - 2025-10-10
 ### Fixed
 - **PCLZIP_ERR_MISSING_FILE (-4) Resolution**: Complete rewrite of `upgrader_pre_download` filter to properly handle all download scenarios

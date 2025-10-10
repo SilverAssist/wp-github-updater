@@ -1,12 +1,35 @@
 # Copilot Instructions for WP GitHub Updater Package
 
+## 📋 Documentation Policy
+
+**CRITICAL: ALL documentation must be consolidated in these three files ONLY:**
+
+1. **README.md** - User-facing documentation, installation, usage examples, API reference
+2. **CHANGELOG.md** - Version history, changes, bug fixes, new features
+3. **.github/copilot-instructions.md** - This file, development guidelines and architecture
+
+**🚫 NEVER create separate documentation files:**
+- ❌ Do NOT create files like `docs/GUIDE.md`, `docs/TESTING.md`, `TROUBLESHOOTING.md`, etc.
+- ❌ Do NOT create a `docs/` directory
+- ❌ Do NOT split documentation into multiple MD files
+
+**✅ Instead:**
+- Add user documentation to appropriate sections in README.md
+- Add development/architecture notes to this copilot-instructions.md file
+- Add version changes to CHANGELOG.md
+- Use inline code comments for complex logic explanation
+
+**Rationale:** Centralized documentation is easier to maintain, search, and keep in sync with code changes.
+
+---
+
 ## Architecture Overview
 
 This is a **reusable Composer package** that provides WordPress plugin update functionality from GitHub releases. The package is designed to be integrated into various WordPress plugins, not as a standalone plugin.
 
 ## Core Technologies
 
-- **PHP 8.0+**: Modern PHP with strict typing, union types, and nullable parameters
+- **PHP 8.3+**: Modern PHP with strict typing, union types, and nullable parameters
 - **WordPress 6.0+**: WordPress update system integration via hooks and filters
 - **PSR-4 Autoloading**: Namespace-based class loading for better organization
 - **GitHub API v3**: REST API integration for release management

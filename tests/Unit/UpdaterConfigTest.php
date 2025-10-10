@@ -1,20 +1,27 @@
 <?php
 
-namespace SilverAssist\WpGithubUpdater\Tests;
+namespace SilverAssist\WpGithubUpdater\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use SilverAssist\WpGithubUpdater\UpdaterConfig;
 
 class UpdaterConfigTest extends TestCase
 {
+    private static string $testPluginFile;
+
+    public static function setUpBeforeClass(): void
+    {
+        self::$testPluginFile = dirname(__DIR__) . "/fixtures/test-plugin.php";
+    }
+
     public function testBasicConfiguration(): void
     {
-        $config = new UpdaterConfig("/path/to/plugin.php", "owner/repo");
+        $config = new UpdaterConfig(self::$testPluginFile, "owner/repo");
 
-        $this->assertEquals("/path/to/plugin.php", $config->pluginFile);
+        $this->assertEquals(self::$testPluginFile, $config->pluginFile);
         $this->assertEquals("owner/repo", $config->githubRepo);
         $this->assertEquals("6.0", $config->requiresWordPress);
-        $this->assertEquals("8.0", $config->requiresPHP);
+        $this->assertEquals("8.3", $config->requiresPHP);
         $this->assertEquals("{slug}-v{version}.zip", $config->assetPattern);
         $this->assertEquals("wp-github-updater", $config->textDomain);
     }
@@ -34,7 +41,7 @@ class UpdaterConfigTest extends TestCase
             "text_domain" => "my-custom-plugin"
         ];
 
-        $config = new UpdaterConfig("/path/to/plugin.php", "owner/repo", $options);
+        $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", $options);
 
         $this->assertEquals("Test Plugin", $config->pluginName);
         $this->assertEquals("A test plugin", $config->pluginDescription);
@@ -50,7 +57,7 @@ class UpdaterConfigTest extends TestCase
 
     public function testTranslationMethods(): void
     {
-        $config = new UpdaterConfig("/path/to/plugin.php", "owner/repo", [
+        $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", [
             "text_domain" => "test-domain"
         ]);
 
