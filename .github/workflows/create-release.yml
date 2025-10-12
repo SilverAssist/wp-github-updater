@@ -35,6 +35,12 @@ jobs:
                   mysql -e "FLUSH PRIVILEGES;" -uroot -proot
                   echo "✅ MySQL database configured"
 
+            - name: Install Subversion (required for WordPress Test Suite)
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y subversion
+                  echo "✅ Subversion installed"
+
             - name: Install Composer dependencies
               run: |
                   composer install --optimize-autoloader --no-interaction
