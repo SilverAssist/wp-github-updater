@@ -23,13 +23,29 @@ jobs:
               uses: shivammathur/setup-php@v2
               with:
                   php-version: "8.2"
-                  extensions: mbstring, xml, ctype, json, tokenizer
+                  extensions: mbstring, xml, ctype, json, tokenizer, mysqli
                   coverage: none
+
+            - name: Setup MySQL
+              run: |
+                  sudo systemctl start mysql.service
+                  mysql -e "CREATE DATABASE IF NOT EXISTS wordpress_test;" -uroot -proot
+                  mysql -e "CREATE USER IF NOT EXISTS 'wp_test'@'localhost' IDENTIFIED BY 'wp_test';" -uroot -proot
+                  mysql -e "GRANT ALL PRIVILEGES ON wordpress_test.* TO 'wp_test'@'localhost';" -uroot -proot
+                  mysql -e "FLUSH PRIVILEGES;" -uroot -proot
+                  echo "✅ MySQL database configured"
 
             - name: Install Composer dependencies
               run: |
                   composer install --optimize-autoloader --no-interaction
                   echo "✅ Composer dependencies installed successfully (including dev dependencies for testing)"
+
+            - name: Install WordPress Test Suite
+              run: |
+                  echo "📦 Installing WordPress Test Suite..."
+                  chmod +x scripts/install-wp-tests.sh
+                  bash scripts/install-wp-tests.sh wordpress_test wp_test wp_test localhost latest
+                  echo "✅ WordPress Test Suite installed"
 
             - name: Extract version from tag or input
               id: version
@@ -76,14 +92,14 @@ jobs:
 
             - name: Run tests
               run: |
-                  echo "🧪 Running PHPUnit tests..."
+                  echo "🧪 Running PHPUnit tests with WordPress Test Suite..."
                   echo "Working directory: $(pwd)"
                   echo "Checking for phpunit.xml:"
                   ls -la phpunit.xml || echo "phpunit.xml not found"
                   echo "Checking tests directory:"
                   ls -la tests/
                   ./vendor/bin/phpunit --configuration=phpunit.xml
-                  echo "✅ All tests passed"
+                  echo "✅ All tests passed (including WordPress integration tests)"
 
             - name: Run code quality checks
               run: |
