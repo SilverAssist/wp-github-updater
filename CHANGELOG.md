@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.1] - 2025-10-11
+
+### Changed
+- **PHP Version Requirement**: Lowered minimum PHP version from 8.3 to 8.2 for broader compatibility
+- **Documentation Updates**: Updated all documentation, examples, and tests to reflect PHP 8.2 requirement
+- **Workflow Updates**: Updated GitHub Actions workflow to reflect PHP 8.2 requirement
+
+### Testing
+- **51 Tests Passing**: All tests verified with PHP 8.2 compatibility
+- **Test Fixtures Updated**: Updated all test fixtures and expectations for PHP 8.2
+
 ## [1.2.0] - 2025-10-10
 
 ### Changed

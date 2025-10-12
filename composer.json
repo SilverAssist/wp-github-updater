@@ -1,7 +1,7 @@
 {
     "name": "silverassist/wp-github-updater",
     "description": "A reusable WordPress plugin updater that handles automatic updates from public GitHub releases",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "type": "library",
     "keywords": [
         "wordpress",
