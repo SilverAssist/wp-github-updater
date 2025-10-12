@@ -47,6 +47,12 @@
     <!-- WordPress Security (Critical for WordPress integration) -->
     <rule ref="WordPress.Security.EscapeOutput"/>
     <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+    
+    <!-- Exclude WordPress.Security checks from test files -->
+    <rule ref="WordPress.Security">
+        <exclude-pattern>tests/bootstrap.php</exclude-pattern>
+        <exclude-pattern>tests/fixtures/*</exclude-pattern>
+    </rule>
 
     <!-- WordPress i18n (Text domain validation) -->
     <rule ref="WordPress.WP.I18n">
