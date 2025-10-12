@@ -83,7 +83,7 @@ class WordPressHooksTest extends TestCase
         // When plugin file doesn't exist or can't be read, author will be empty string
         // unless explicitly provided in options
         $this->assertIsString($this->config->pluginAuthor);
-        
+
         // Test with explicit author option
         $configWithAuthor = new UpdaterConfig($this->testPluginFile, "SilverAssist/test-repo", [
             "plugin_author" => "SilverAssist",

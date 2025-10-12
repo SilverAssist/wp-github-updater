@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Real GitHub API Integration Tests
  *

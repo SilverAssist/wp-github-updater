@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Test Plugin for Unit Tests
  * Description: A minimal test plugin for UpdaterConfig tests

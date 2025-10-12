@@ -83,23 +83,23 @@ if (!function_exists("plugin_basename")) {
     {
         $file = str_replace("\\", "/", $file);
         $file = preg_replace("|/+|", "/", $file);
-        
+
         // If WP_PLUGIN_DIR is defined, make path relative to it
         if (defined("WP_PLUGIN_DIR")) {
             $plugin_dir = str_replace("\\", "/", WP_PLUGIN_DIR);
             $plugin_dir = preg_replace("|/+|", "/", $plugin_dir);
             $file = preg_replace("#^" . preg_quote($plugin_dir, "#") . "/#", "", $file);
         }
-        
+
         // Otherwise just return folder/file.php format
         $file = trim($file, "/");
         $parts = explode("/", $file);
-        
+
         if (count($parts) >= 2) {
             // Return last two parts: folder/file.php
             return $parts[count($parts) - 2] . "/" . $parts[count($parts) - 1];
         }
-        
+
         return basename($file);
     }
 }

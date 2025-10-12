@@ -46,10 +46,10 @@ class MockPluginTest extends WP_UnitTestCase
         // Load the mock plugin
         if (file_exists($this->pluginFile)) {
             require_once $this->pluginFile;
-            
+
             // Initialize the updater
             do_action("plugins_loaded");
-            
+
             // Get updater instance
             $this->updater = mock_plugin_get_updater();
         }
@@ -227,7 +227,7 @@ class MockPluginTest extends WP_UnitTestCase
     public function testPluginBasename(): void
     {
         $basename = plugin_basename($this->pluginFile);
-        
+
         $this->assertIsString($basename);
         $this->assertStringContainsString("mock-plugin.php", $basename);
     }
@@ -239,7 +239,7 @@ class MockPluginTest extends WP_UnitTestCase
     {
         // This tests the v1.1.3+ feature for custom temp directories
         $expectedTempDir = WP_CONTENT_DIR . "/uploads/temp";
-        
+
         // The mock plugin configures a custom temp dir
         // We verify this through the configuration
         $this->assertDirectoryExists(WP_CONTENT_DIR . "/uploads");

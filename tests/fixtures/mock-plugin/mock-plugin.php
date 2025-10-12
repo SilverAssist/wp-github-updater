@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Mock Plugin for WP GitHub Updater Tests
  * Plugin URI: https://github.com/SilverAssist/wp-github-updater
@@ -45,33 +46,33 @@ function mock_plugin_init_updater(): void
             "plugin_name" => "Mock Plugin for Testing",
             "plugin_description" => "A mock plugin for WP GitHub Updater tests",
             "plugin_author" => "SilverAssist",
-            
+
             // Optional: Custom cache duration (default: 12 hours)
             "cache_duration" => 300, // 5 minutes for testing
-            
+
             // Optional: Custom text domain for translations
             "text_domain" => "mock-plugin",
-            
+
             // Optional: Custom temporary directory for downloads
             "custom_temp_dir" => WP_CONTENT_DIR . "/uploads/temp",
-            
+
             // Optional: Custom AJAX action names
             "ajax_action" => "mock_plugin_check_version",
             "ajax_nonce" => "mock_plugin_nonce",
-            
+
             // Optional: Custom asset pattern for GitHub releases
             "asset_pattern" => "mock-plugin-{version}.zip",
-            
+
             // Optional: WordPress and PHP requirements
             "requires_wp" => "6.0",
             "requires_php" => "8.2",
             "last_updated" => \gmdate("Y-m-d H:i:s"),
         ]
     );
-    
+
     // Initialize the updater
     $updater = new Updater($config);
-    
+
     // Store in global scope for testing access
     $GLOBALS["mock_plugin_updater"] = $updater;
 }
@@ -104,9 +105,9 @@ function mock_plugin_admin_page(): void
     if (!current_user_can("manage_options")) {
         return;
     }
-    
+
     $updater = $GLOBALS["mock_plugin_updater"] ?? null;
-    
+
     ?>
     <div class="wrap">
         <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -126,7 +127,7 @@ function mock_plugin_admin_page(): void
                     <th>Update Available:</th>
                     <td><?php echo $updater && $updater->isUpdateAvailable() ? "✅ Yes" : "❌ No"; ?></td>
                 </tr>
-                <?php if ($updater && $updater->isUpdateAvailable()): ?>
+                <?php if ($updater && $updater->isUpdateAvailable()) : ?>
                 <tr>
                     <th>Latest Version:</th>
                     <td><?php echo esc_html($updater->getLatestVersion()); ?></td>

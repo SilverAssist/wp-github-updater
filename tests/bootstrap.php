@@ -54,7 +54,7 @@ if ($_wp_tests_available) {
     {
         // Load the mock plugin that uses the WP GitHub Updater package
         $mock_plugin_file = __DIR__ . "/fixtures/mock-plugin/mock-plugin.php";
-        
+
         if (file_exists($mock_plugin_file)) {
             require_once $mock_plugin_file;
             echo "✓ Mock plugin loaded: {$mock_plugin_file}\n";
@@ -67,10 +67,9 @@ if ($_wp_tests_available) {
 
     // Start up the WP testing environment
     require $_tests_dir . "/includes/bootstrap.php";
-
 } else {
     // WordPress Test Suite not available - use mocks
-    
+
     // Define WordPress constants for mock environment
     if (!defined("ABSPATH")) {
         define("ABSPATH", __DIR__ . "/../");
@@ -83,10 +82,10 @@ if ($_wp_tests_available) {
     if (!defined("WP_PLUGIN_DIR")) {
         define("WP_PLUGIN_DIR", WP_CONTENT_DIR . "/plugins");
     }
-    
+
     // Load WordPress function mocks for non-WP-Test-Suite environment
     require_once __DIR__ . "/wordpress-mocks.php";
-    
+
     if (!$_skip_wp_tests) {
         echo "\n";
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
