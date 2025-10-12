@@ -9,7 +9,7 @@
  * License: MIT
  * Text Domain: mock-plugin
  * Requires at least: 6.0
- * Requires PHP: 8.3
+ * Requires PHP: 8.2
  *
  * This is a test fixture plugin that demonstrates integration with
  * the SilverAssist/WpGithubUpdater package for automated testing.
@@ -63,8 +63,9 @@ function mock_plugin_init_updater(): void
             "asset_pattern" => "mock-plugin-{version}.zip",
             
             // Optional: WordPress and PHP requirements
-            "requires_wordpress" => "6.0",
-            "requires_php" => "8.3",
+            "requires_wp" => "6.0",
+            "requires_php" => "8.2",
+            "last_updated" => \gmdate("Y-m-d H:i:s"),
         ]
     );
     

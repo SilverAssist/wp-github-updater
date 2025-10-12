@@ -218,7 +218,7 @@ class MockPluginTest extends WP_UnitTestCase
         $this->assertEquals("1.0.0", $pluginData["Version"]);
         $this->assertEquals("SilverAssist", $pluginData["Author"]);
         $this->assertEquals("6.0", $pluginData["RequiresWP"]);
-        $this->assertEquals("8.3", $pluginData["RequiresPHP"]);
+        $this->assertEquals("8.2", $pluginData["RequiresPHP"]);
     }
 
     /**

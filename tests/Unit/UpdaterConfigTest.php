@@ -21,7 +21,7 @@ class UpdaterConfigTest extends TestCase
         $this->assertEquals(self::$testPluginFile, $config->pluginFile);
         $this->assertEquals("owner/repo", $config->githubRepo);
         $this->assertEquals("6.0", $config->requiresWordPress);
-        $this->assertEquals("8.3", $config->requiresPHP);
+        $this->assertEquals("8.2", $config->requiresPHP);
         $this->assertEquals("{slug}-v{version}.zip", $config->assetPattern);
         $this->assertEquals("wp-github-updater", $config->textDomain);
     }

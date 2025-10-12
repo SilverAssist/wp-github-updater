@@ -6,7 +6,7 @@
  * Author: Test Author
  * Author URI: https://example.com
  * Requires at least: 6.0
- * Requires PHP: 8.3
+ * Requires PHP: 8.2
  * Text Domain: test-plugin
  */
 

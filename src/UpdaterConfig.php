@@ -164,7 +164,7 @@ class UpdaterConfig
         $this->pluginAuthor = $options["plugin_author"] ?? $pluginData["Author"] ?? "";
         $this->pluginHomepage = $options["plugin_homepage"] ?? "https://github.com/{$githubRepo}";
         $this->requiresWordPress = $options["requires_wordpress"] ?? "6.0";
-        $this->requiresPHP = $options["requires_php"] ?? "8.3";
+        $this->requiresPHP = $options["requires_php"] ?? "8.2";
         $this->assetPattern = $options["asset_pattern"] ?? "{slug}-v{version}.zip";
         $this->cacheDuration = $options["cache_duration"] ?? (12 * 3600); // 12 hours
         $this->ajaxAction = $options["ajax_action"] ?? "check_plugin_version";

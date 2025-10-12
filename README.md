@@ -253,7 +253,7 @@ The updater automatically tries multiple strategies for temporary file creation:
 
 ## Requirements
 
-- PHP 8.3 or higher
+- PHP 8.2 or higher
 - WordPress 6.0 or higher
 - Composer for dependency management
 - Public GitHub repository with releases

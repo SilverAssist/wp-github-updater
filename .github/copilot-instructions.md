@@ -29,7 +29,7 @@ This is a **reusable Composer package** that provides WordPress plugin update fu
 
 ## Core Technologies
 
-- **PHP 8.3+**: Modern PHP with strict typing, union types, and nullable parameters
+- **PHP 8.2+**: Modern PHP with strict typing, union types, and nullable parameters
 - **WordPress 6.0+**: WordPress update system integration via hooks and filters
 - **PSR-4 Autoloading**: Namespace-based class loading for better organization
 - **GitHub API v3**: REST API integration for release management

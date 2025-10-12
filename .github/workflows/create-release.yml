@@ -138,7 +138,7 @@ jobs:
                   - **Version**: $VERSION
                   - **Namespace**: SilverAssist\\WpGithubUpdater
                   - **License**: PolyForm Noncommercial 1.0.0
-                  - **PHP Version**: 8.3+
+                  - **PHP Version**: 8.2+
                   - **WordPress Version**: 6.0+
 
                   ## 🚀 Installation via Composer
@@ -177,7 +177,7 @@ jobs:
                   - **API Docs**: Comprehensive PHPDoc documentation
 
                   ## 🔧 Requirements
-                  - PHP 8.3 or higher
+                  - PHP 8.2 or higher
                   - WordPress 6.0 or higher
                   - Composer for package management
                   - GitHub repository with releases for updates
@@ -217,7 +217,7 @@ jobs:
                   \`\`\`
 
                   ## Requirements
-                  - PHP 8.3+
+                  - PHP 8.2+
                   - WordPress 6.0+
                   - Composer
                   - GitHub repository with releases

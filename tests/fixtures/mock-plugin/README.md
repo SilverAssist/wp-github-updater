@@ -170,7 +170,7 @@ $pluginData = get_plugin_data($pluginFile);
     "Version" => "1.0.0",
     "Author" => "SilverAssist",
     "RequiresWP" => "6.0",
-    "RequiresPHP" => "8.3",
+    "RequiresPHP" => "8.2",
     // ...
 ]
 ```
@@ -213,7 +213,7 @@ El mock plugin demuestra todas las opciones disponibles:
     "ajax_nonce" => "mock_plugin_nonce",
     "asset_pattern" => "mock-plugin-{version}.zip",
     "requires_wordpress" => "6.0",
-    "requires_php" => "8.3",
+    "requires_php" => "8.2",
 ]
 ```
 
@@ -238,7 +238,7 @@ El plugin apunta a `SilverAssist/mock-test-repo` que puede no existir. Para test
 ### Compatibilidad
 
 - **WordPress**: 6.0+
-- **PHP**: 8.3+
+- **PHP**: 8.2+
 - **PHPUnit**: 9.6+
 - **WordPress Test Suite**: Requerido para tests completos
 

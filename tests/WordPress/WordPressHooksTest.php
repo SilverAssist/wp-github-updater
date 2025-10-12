@@ -171,7 +171,7 @@ class WordPressHooksTest extends TestCase
     {
         $this->assertIsString($this->config->requiresPHP);
         $this->assertMatchesRegularExpression("/^\d+\.\d+$/", $this->config->requiresPHP);
-        $this->assertGreaterThanOrEqual(8.3, (float) $this->config->requiresPHP);
+        $this->assertGreaterThanOrEqual(8.2, (float) $this->config->requiresPHP);
     }
 
     /**
