@@ -342,6 +342,23 @@ $config = new UpdaterConfig(
 );
 ```
 
+### PHPUnit Version Policy
+
+**This package uses PHPUnit 9.6.x and MUST remain on this version.**
+
+**Why PHPUnit 9.6?**
+- ✅ **WordPress Ecosystem Standard**: Most WordPress projects use PHPUnit 9.6
+- ✅ **WordPress Coding Standards Compatible**: [WordPress Coding Standards](https://github.com/WordPress/WordPress-Coding-Standards) uses PHPUnit 9.x
+- ✅ **Yoast PHPUnit Polyfills**: Version 4.x supports PHPUnit 7.5-9.x, 11.x, 12.x, but **NOT 10.x**
+- ✅ **Consumer Compatibility**: Projects depending on this package expect PHPUnit 9.6
+
+**Do NOT upgrade to:**
+- ❌ PHPUnit 10.x (incompatible with Yoast PHPUnit Polyfills 4.x)
+- ❌ PHPUnit 11.x or 12.x (breaks compatibility with most WordPress projects)
+
+**Dependabot Configuration:**
+The `.github/dependabot.yml` file is configured to automatically ignore PHPUnit major version updates, ensuring the package remains on 9.x.
+
 ### Code Standards
 
 ```bash
