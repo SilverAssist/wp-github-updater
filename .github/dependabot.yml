@@ -13,6 +13,11 @@ updates:
       - "composer"
       - "automated"
     open-pull-requests-limit: 10
+    # Ignore PHPUnit major version updates
+    # Keep at 9.x for WordPress compatibility
+    ignore:
+      - dependency-name: "phpunit/phpunit"
+        update-types: ["version-update:semver-major"]
     groups:
       composer-updates:
         patterns:
@@ -34,7 +39,7 @@ updates:
       - "github-actions"
       - "automated"
     open-pull-requests-limit: 10
-    
+
     # Group all GitHub Actions updates together
     groups:
       github-actions-updates:

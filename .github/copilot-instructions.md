@@ -35,6 +35,42 @@ This is a **reusable Composer package** that provides WordPress plugin update fu
 - **GitHub API v3**: REST API integration for release management
 - **Composer Package**: Distributed via Packagist as `silverassist/wp-github-updater`
 
+## 🔒 PHPUnit Version Policy - CRITICAL
+
+**MANDATORY: PHPUnit MUST remain at version 9.6.x**
+
+### Rationale
+- **WordPress Ecosystem Standard**: PHPUnit 9.6 is the most widely used version across WordPress projects
+- **WordPress Coding Standards**: The official [WordPress Coding Standards](https://github.com/WordPress/WordPress-Coding-Standards) uses PHPUnit 9.x
+- **Yoast PHPUnit Polyfills**: Version 4.x supports PHPUnit 7.5-9.x, 11.x, and 12.x, but **NOT 10.x**
+- **Consumer Compatibility**: Most projects depending on this package use PHPUnit 9.6
+
+### Version Constraints
+```json
+{
+  "require-dev": {
+    "phpunit/phpunit": "^9.6",
+    "yoast/phpunit-polyfills": "^4.0"
+  }
+}
+```
+
+### What NOT to do
+- ❌ Do NOT upgrade PHPUnit to version 10.x (not supported by Yoast PHPUnit Polyfills)
+- ❌ Do NOT upgrade to PHPUnit 11.x or 12.x (breaks compatibility with most WordPress projects)
+- ❌ Do NOT accept Dependabot PRs that upgrade PHPUnit beyond 9.x
+
+### Configuration Files
+- **dependabot.yml**: Configured to ignore PHPUnit major version updates
+- **composer.json**: Locked to `^9.6` version constraint
+- **phpunit.xml**: Uses PHPUnit 9.6 schema reference
+
+### When to Reconsider
+Only upgrade PHPUnit when:
+1. WordPress Coding Standards officially adopts a newer version
+2. Majority of WordPress ecosystem projects have migrated
+3. All dependent projects confirm compatibility
+
 ## Project Structure
 
 ```
