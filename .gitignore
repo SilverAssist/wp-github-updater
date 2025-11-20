@@ -5,7 +5,6 @@ composer.lock
 # PHPUnit
 # /phpunit.xml  # Keep phpunit.xml for CI/CD workflow
 /.phpunit.result.cache
-/.phpunit.cache
 
 # Code coverage
 /coverage/
