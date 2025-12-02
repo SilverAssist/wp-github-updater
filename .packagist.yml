@@ -1,0 +1,10 @@
+# Packagist configuration
+# Exclude Dependabot branches from being indexed as versions
+
+branches:
+  # Only include main branch
+  include:
+    - main
+  # Exclude all dependabot branches
+  exclude:
+    - /^dependabot\/.*/
