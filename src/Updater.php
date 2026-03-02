@@ -595,6 +595,102 @@ class Updater
     }
 
     /**
+     * Enqueue the built-in "Check Updates" JavaScript and return the
+     * inline JS call for the Settings Hub action button.
+     *
+     * This method provides a centralized update check script that eliminates
+     * the need for consuming plugins to maintain their own JavaScript files.
+     * The script is loaded once and works for multiple plugins on the same page.
+     *
+     * @param array<string, string> $extraStrings  Optional extra i18n string overrides
+     * @return string Inline JS to echo (e.g. "wpGithubUpdaterCheckUpdates('myData'); return false;")
+     *
+     * @since 1.3.0
+     */
+    public function enqueueCheckUpdatesScript(array $extraStrings = []): string
+    {
+        $dataKey = $this->sanitizeJsVarName("wpGithubUpdater_{$this->pluginBasename}");
+
+        // Enqueue the shared JS (only loaded once even if multiple plugins call this)
+        \wp_enqueue_script(
+            "wp-github-updater-check",
+            $this->getPackageAssetUrl("assets/js/check-updates.js"),
+            ["jquery"],
+            "1.3.0",
+            true
+        );
+
+        // Localize per-plugin data under a unique global key
+        \wp_localize_script("wp-github-updater-check", $dataKey, [
+            "ajaxurl"    => \admin_url("admin-ajax.php"),
+            "nonce"      => \wp_create_nonce($this->config->ajaxNonce),
+            "action"     => $this->config->ajaxAction,
+            "updateUrl"  => \admin_url("update-core.php"),
+            "pluginName" => $this->config->pluginName,
+            "strings"    => array_merge([
+                "checking"        => $this->config->__("Checking for updates..."),
+                "updateAvailable" => $this->config->__("Update available: v%s! Redirecting..."),
+                "upToDate"        => $this->config->__("You're up to date!"),
+                "checkError"      => $this->config->__("Error checking updates. Please try again."),
+                "connectError"    => $this->config->__("Error connecting to update server."),
+                "configError"     => $this->config->__("Update check configuration error."),
+            ], $extraStrings),
+        ]);
+
+        return "wpGithubUpdaterCheckUpdates('{$dataKey}'); return false;";
+    }
+
+    /**
+     * Get the URL to a package asset file
+     *
+     * Resolves the URL to assets within the vendor/silverassist/wp-github-updater directory.
+     * This handles the package being installed via Composer in the vendor directory.
+     *
+     * @param string $assetPath Relative path to asset (e.g., 'assets/js/check-updates.js')
+     * @return string Full URL to the asset file
+     *
+     * @since 1.3.0
+     */
+    private function getPackageAssetUrl(string $assetPath): string
+    {
+        // Get the package directory path
+        $packageDir = dirname(__DIR__);
+
+        // Convert absolute path to URL relative to WordPress installation
+        $packageUrl = str_replace(
+            \wp_normalize_path(ABSPATH),
+            \site_url("/"),
+            \wp_normalize_path($packageDir)
+        );
+
+        return rtrim($packageUrl, "/") . "/" . ltrim($assetPath, "/");
+    }
+
+    /**
+     * Sanitize a string to create a valid JavaScript variable name
+     *
+     * Removes or replaces characters that are not valid in JavaScript identifiers.
+     * Used to generate unique global variable names for wp_localize_script.
+     *
+     * @param string $name Raw name to sanitize
+     * @return string Valid JavaScript variable name
+     *
+     * @since 1.3.0
+     */
+    private function sanitizeJsVarName(string $name): string
+    {
+        // Replace invalid characters with underscores
+        $sanitized = preg_replace("/[^a-zA-Z0-9_$]/", "_", $name);
+
+        // Ensure it doesn't start with a number
+        if ($sanitized && is_numeric($sanitized[0])) {
+            $sanitized = "_" . $sanitized;
+        }
+
+        return $sanitized ?: "wpGithubUpdater_default";
+    }
+
+    /**
      * Parse Markdown to HTML
      *
      * Converts basic Markdown syntax to HTML for better changelog display.

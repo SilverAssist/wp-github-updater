@@ -161,3 +161,102 @@ if (!function_exists("get_plugin_data")) {
         return $data;
     }
 }
+
+// Admin functions
+if (!function_exists("admin_url")) {
+    /**
+     * Mock admin_url function for tests
+     *
+     * @param string $path   Path relative to admin URL
+     * @param string $scheme URL scheme
+     * @return string Admin URL
+     */
+    function admin_url(string $path = "", string $scheme = "admin"): string
+    {
+        return "http://example.com/wp-admin/" . ltrim($path, "/");
+    }
+}
+
+if (!function_exists("site_url")) {
+    /**
+     * Mock site_url function for tests
+     *
+     * @param string $path   Path relative to site URL
+     * @param string $scheme URL scheme
+     * @return string Site URL
+     */
+    function site_url(string $path = "", string $scheme = null): string
+    {
+        return "http://example.com/" . ltrim($path, "/");
+    }
+}
+
+if (!function_exists("wp_normalize_path")) {
+    /**
+     * Mock wp_normalize_path function for tests
+     *
+     * @param string $path Path to normalize
+     * @return string Normalized path
+     */
+    function wp_normalize_path(string $path): string
+    {
+        $path = str_replace("\\", "/", $path);
+        $path = preg_replace("|(?<=.)/+|", "/", $path);
+        if (":" === substr($path, 1, 1)) {
+            $path = ucfirst($path);
+        }
+        return $path;
+    }
+}
+
+// Script enqueue functions
+if (!function_exists("wp_enqueue_script")) {
+    /**
+     * Mock wp_enqueue_script function for tests
+     *
+     * @param string           $handle    Script handle
+     * @param string           $src       Script source URL
+     * @param array            $deps      Dependencies
+     * @param string|bool|null $ver       Version
+     * @param bool             $in_footer Load in footer
+     * @return void
+     */
+    function wp_enqueue_script(string $handle, string $src = "", array $deps = [], $ver = false, bool $in_footer = false): void
+    {
+        // Mock - do nothing in tests
+    }
+}
+
+if (!function_exists("wp_localize_script")) {
+    /**
+     * Mock wp_localize_script function for tests
+     *
+     * @param string $handle      Script handle
+     * @param string $object_name JavaScript object name
+     * @param array  $l10n        Localization data
+     * @return bool Always returns true
+     */
+    function wp_localize_script(string $handle, string $object_name, array $l10n): bool
+    {
+        // Mock - store in global for testing if needed
+        global $wp_localized_scripts;
+        if (!isset($wp_localized_scripts)) {
+            $wp_localized_scripts = [];
+        }
+        $wp_localized_scripts[$handle][$object_name] = $l10n;
+        return true;
+    }
+}
+
+if (!function_exists("wp_create_nonce")) {
+    /**
+     * Mock wp_create_nonce function for tests
+     *
+     * @param string|int $action Action name
+     * @return string Nonce token
+     */
+    function wp_create_nonce($action = -1): string
+    {
+        return "test_nonce_" . md5((string) $action);
+    }
+}
