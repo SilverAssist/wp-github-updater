@@ -111,7 +111,7 @@ class UpdaterEnqueueScriptTest extends TestCase
     public function testGetPackageAssetUrlWithStandardVendorStructure(): void
     {
         // Create a temporary plugin structure that mimics a real Composer installation
-        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid();
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
         $pluginDir = $tempDir . "/my-plugin";
         $vendorDir = $pluginDir . "/vendor/silverassist/wp-github-updater";
         $assetsDir = $vendorDir . "/assets/js";
