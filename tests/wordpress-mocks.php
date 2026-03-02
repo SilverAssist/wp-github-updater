@@ -228,7 +228,17 @@ if (!function_exists("wp_enqueue_script")) {
         $ver = false,
         bool $in_footer = false
     ): void {
-        // Mock - do nothing in tests
+        // Store enqueued scripts in global for testing
+        global $wp_enqueued_scripts;
+        if (!isset($wp_enqueued_scripts)) {
+            $wp_enqueued_scripts = [];
+        }
+        $wp_enqueued_scripts[$handle] = [
+            "src" => $src,
+            "deps" => $deps,
+            "ver" => $ver,
+            "in_footer" => $in_footer,
+        ];
     }
 }
 

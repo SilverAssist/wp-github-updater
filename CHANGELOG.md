@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.3.1] - 2026-03-02
+
+### Fixed
+- **Multi-Plugin Asset URL Resolution**: Fixed `getPackageAssetUrl()` method to correctly resolve asset URLs when multiple plugins use the package simultaneously. Previously, PHP's autoloader would load the `Updater` class from the first registered vendor directory, causing `__DIR__` to always resolve to that location and resulting in 404 errors for JavaScript assets in other plugins.
+- **Plugin-Specific Path Resolution**: Changed to use `$this->config->pluginFile`-based resolution instead of `__DIR__`, ensuring each plugin instance loads assets from its own vendor directory.
+- **Fallback Support**: Maintained backward compatibility with `__DIR__`-based fallback for non-standard installations or development environments.
+
+### Added
+- **Comprehensive Multi-Plugin Tests**: Added three new unit tests specifically for multi-plugin scenarios:
+  - `testGetPackageAssetUrlWithStandardVendorStructure()` - Tests standard Composer vendor structure
+  - `testGetPackageAssetUrlFallbackForNonStandardInstallation()` - Tests fallback behavior
+  - `testGetPackageAssetUrlWithMultiplePlugins()` - Tests simultaneous multi-plugin usage
+
+### Technical Details
+The bug occurred because:
+1. PHP's autoloader loads classes from the first registered vendor directory
+2. `__DIR__` in a shared class always points to that first location
+3. Multiple plugin instances would all resolve to the same (incorrect) asset path
+4. This caused 404 errors and "wpGithubUpdaterCheckUpdates is not defined" JavaScript errors
+
+The fix:
+1. Uses `$this->config->pluginFile` which is unique per plugin instance
+2. Constructs the standard vendor path: `vendor/silverassist/wp-github-updater`
+3. Verifies the path exists before using it
+4. Falls back to `__DIR__`-based resolution for non-standard setups
+
 ## [1.3.0] - 2026-03-02
 
 ### Added

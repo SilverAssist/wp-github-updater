@@ -99,4 +99,216 @@ class UpdaterEnqueueScriptTest extends TestCase
         // Results should be identical
         $this->assertEquals($result1, $result2);
     }
+
+    /**
+     * Test asset URL resolution with standard vendor directory structure
+     *
+     * Simulates a plugin with the package installed via Composer in vendor/silverassist/wp-github-updater
+     * This tests the primary path resolution logic for multi-plugin scenarios.
+     *
+     * @since 1.3.1
+     */
+    public function testAssetUrlResolutionWithStandardVendorStructure(): void
+    {
+        // Create a temporary plugin structure that mimics a real Composer installation
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
+        $pluginDir = $tempDir . "/my-plugin";
+        $vendorDir = $pluginDir . "/vendor/silverassist/wp-github-updater";
+        $assetsDir = $vendorDir . "/assets/js";
+
+        // Create the directory structure
+        mkdir($assetsDir, 0755, true);
+
+        // Create a mock plugin file
+        $pluginFile = $pluginDir . "/my-plugin.php";
+        file_put_contents($pluginFile, "<?php // Mock plugin file");
+
+        // Create the actual asset file
+        $assetFile = $assetsDir . "/check-updates.js";
+        file_put_contents($assetFile, "// Mock JavaScript file");
+
+        try {
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
+
+            $config = new UpdaterConfig($pluginFile, "owner/repo", [
+                "plugin_name" => "My Plugin",
+            ]);
+
+            $updater = new Updater($config);
+
+            // Call the public API method which internally uses getPackageAssetUrl()
+            $updater->enqueueCheckUpdatesScript();
+
+            // Check that wp_enqueue_script was called with the correct URL
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+
+            // The URL should contain the vendor path
+            $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $enqueuedSrc);
+            $this->assertStringContainsString("assets/js/check-updates.js", $enqueuedSrc);
+            $this->assertStringContainsString("my-plugin", $enqueuedSrc);
+        } finally {
+            // Cleanup
+            if (is_dir($tempDir)) {
+                $this->recursiveRemoveDirectory($tempDir);
+            }
+        }
+    }
+
+    /**
+     * Test asset URL resolution fallback for non-standard installations
+     *
+     * When the standard vendor path doesn't exist, the method should fall back
+     * to __DIR__-based resolution for development or non-Composer installations.
+     *
+     * @since 1.3.1
+     */
+    public function testAssetUrlResolutionFallbackForNonStandardInstallation(): void
+    {
+        // Create a temporary plugin structure WITHOUT vendor directory
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
+        $pluginDir = $tempDir . "/my-plugin";
+
+        // Create the directory structure (no vendor dir)
+        mkdir($pluginDir, 0755, true);
+
+        // Create a mock plugin file
+        $pluginFile = $pluginDir . "/my-plugin.php";
+        file_put_contents($pluginFile, "<?php // Mock plugin file");
+
+        try {
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
+
+            $config = new UpdaterConfig($pluginFile, "owner/repo", [
+                "plugin_name" => "My Plugin",
+            ]);
+
+            $updater = new Updater($config);
+
+            // Call the public API method which internally uses getPackageAssetUrl()
+            $updater->enqueueCheckUpdatesScript();
+
+            // Check that wp_enqueue_script was called
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+
+            // The URL should contain the asset path (fallback behavior)
+            $this->assertStringContainsString("assets/js/check-updates.js", $enqueuedSrc);
+            $this->assertIsString($enqueuedSrc);
+        } finally {
+            // Cleanup
+            if (is_dir($tempDir)) {
+                $this->recursiveRemoveDirectory($tempDir);
+            }
+        }
+    }
+
+    /**
+     * Test multi-plugin scenario where different plugins use the same package
+     *
+     * This is the critical test for the bug fix. When multiple plugins use this package,
+     * each plugin instance should resolve assets from its own vendor directory, not from
+     * the first loaded instance's directory.
+     *
+     * @since 1.3.1
+     */
+    public function testAssetUrlResolutionWithMultiplePlugins(): void
+    {
+        // Create two plugin directories with identical vendor structure
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
+
+        $plugin1Dir = $tempDir . "/plugin-one";
+        $vendor1Dir = $plugin1Dir . "/vendor/silverassist/wp-github-updater";
+        mkdir($vendor1Dir . "/assets/js", 0755, true);
+
+        $plugin2Dir = $tempDir . "/plugin-two";
+        $vendor2Dir = $plugin2Dir . "/vendor/silverassist/wp-github-updater";
+        mkdir($vendor2Dir . "/assets/js", 0755, true);
+
+        $plugin1File = $plugin1Dir . "/plugin-one.php";
+        $plugin2File = $plugin2Dir . "/plugin-two.php";
+        file_put_contents($plugin1File, "<?php // Plugin One");
+        file_put_contents($plugin2File, "<?php // Plugin Two");
+
+        // Create the actual asset files in both plugins
+        $asset1File = $vendor1Dir . "/assets/js/check-updates.js";
+        $asset2File = $vendor2Dir . "/assets/js/check-updates.js";
+        file_put_contents($asset1File, "// Plugin One JavaScript");
+        file_put_contents($asset2File, "// Plugin Two JavaScript");
+
+        try {
+            // Create instances for both plugins
+            $config1 = new UpdaterConfig($plugin1File, "owner/repo1", [
+                "plugin_name" => "Plugin One",
+            ]);
+            $updater1 = new Updater($config1);
+
+            $config2 = new UpdaterConfig($plugin2File, "owner/repo2", [
+                "plugin_name" => "Plugin Two",
+            ]);
+            $updater2 = new Updater($config2);
+
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
+
+            // Call enqueueCheckUpdatesScript for first plugin
+            $updater1->enqueueCheckUpdatesScript();
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $assetUrl1 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+
+            // Clear and test second plugin
+            $wp_enqueued_scripts = [];
+            $updater2->enqueueCheckUpdatesScript();
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $assetUrl2 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+
+            // Each plugin should resolve to its own vendor directory
+            $this->assertStringContainsString("plugin-one", $assetUrl1);
+            $this->assertStringNotContainsString("plugin-two", $assetUrl1);
+
+            $this->assertStringContainsString("plugin-two", $assetUrl2);
+            $this->assertStringNotContainsString("plugin-one", $assetUrl2);
+
+            // Both should contain the vendor path and asset path
+            $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $assetUrl1);
+            $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl1);
+
+            $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $assetUrl2);
+            $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl2);
+        } finally {
+            // Cleanup
+            if (is_dir($tempDir)) {
+                $this->recursiveRemoveDirectory($tempDir);
+            }
+        }
+    }
+
+    /**
+     * Recursively remove a directory and its contents
+     *
+     * @param string $dir Directory path to remove
+     * @return void
+     */
+    private function recursiveRemoveDirectory(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $files = array_diff(scandir($dir), [".", ".."]);
+        foreach ($files as $file) {
+            $path = $dir . "/" . $file;
+            if (is_dir($path)) {
+                $this->recursiveRemoveDirectory($path);
+            } else {
+                unlink($path);
+            }
+        }
+        rmdir($dir);
+    }
 }
