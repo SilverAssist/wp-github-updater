@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.3.0
+ * @version 1.3.1
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -616,7 +616,7 @@ class Updater
             "wp-github-updater-check",
             $this->getPackageAssetUrl("assets/js/check-updates.js"),
             ["jquery"],
-            "1.3.0",
+            "1.3.1",
             true
         );
 

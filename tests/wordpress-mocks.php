@@ -289,3 +289,277 @@ if (!function_exists("plugin_dir_url")) {
         return "http://example.com/wp-content/plugins/" . $pluginDir . "/";
     }
 }
+
+// WP_Error class mock
+if (!class_exists("WP_Error")) {
+    /**
+     * Mock WP_Error class for tests
+     *
+     * Provides a minimal implementation of WordPress WP_Error class
+     * so that is_wp_error() checks and error handling work correctly.
+     */
+    // phpcs:ignore PSR1.Classes.ClassDeclaration.MissingNamespace, Squiz.Classes.ValidClassName.NotCamelCaps
+    class WP_Error
+    {
+        /**
+         * Error codes and messages
+         *
+         * @var array<string, array<string>>
+         */
+        public array $errors = [];
+
+        /**
+         * Error data
+         *
+         * @var array<string, mixed>
+         */
+        public array $error_data = [];
+
+        /**
+         * Constructor
+         *
+         * @param string $code    Error code
+         * @param string $message Error message
+         * @param mixed  $data    Error data
+         */
+        public function __construct(string $code = "", string $message = "", $data = "")
+        {
+            if (!empty($code)) {
+                $this->errors[$code][] = $message;
+                if (!empty($data)) {
+                    $this->error_data[$code] = $data;
+                }
+            }
+        }
+
+        /**
+         * Get error message
+         *
+         * @param string $code Error code
+         * @return string Error message
+         */
+        public function get_error_message(string $code = ""): string
+        {
+            if (empty($code)) {
+                $code = array_key_first($this->errors) ?? "";
+            }
+            return $this->errors[$code][0] ?? "";
+        }
+
+        /**
+         * Get error code
+         *
+         * @return string Error code
+         */
+        public function get_error_code(): string
+        {
+            return array_key_first($this->errors) ?? "";
+        }
+    }
+}
+
+if (!function_exists("is_wp_error")) {
+    /**
+     * Mock is_wp_error function for tests
+     *
+     * @param mixed $thing Value to check
+     * @return bool True if WP_Error instance
+     */
+    function is_wp_error($thing): bool
+    {
+        return $thing instanceof WP_Error;
+    }
+}
+
+// Transient functions (in-memory storage for tests)
+if (!function_exists("get_transient")) {
+    /** @var array<string, mixed> Global transient storage for tests */
+    global $wp_mock_transients;
+    $wp_mock_transients = [];
+
+    /**
+     * Mock get_transient function for tests
+     *
+     * Uses in-memory storage to simulate WordPress transient behaviour.
+     *
+     * @param string $transient Transient name
+     * @return mixed Transient value or false if not set/expired
+     */
+    function get_transient(string $transient)
+    {
+        global $wp_mock_transients;
+        if (isset($wp_mock_transients[$transient])) {
+            $entry = $wp_mock_transients[$transient];
+            // Check expiration (0 = no expiration)
+            if ($entry["expiration"] === 0 || $entry["expiration"] > time()) {
+                return $entry["value"];
+            }
+            unset($wp_mock_transients[$transient]);
+        }
+        return false;
+    }
+}
+
+if (!function_exists("set_transient")) {
+    /**
+     * Mock set_transient function for tests
+     *
+     * @param string $transient  Transient name
+     * @param mixed  $value      Transient value
+     * @param int    $expiration Expiration in seconds (0 = no expiration)
+     * @return bool Always returns true
+     */
+    function set_transient(string $transient, $value, int $expiration = 0): bool
+    {
+        global $wp_mock_transients;
+        $wp_mock_transients[$transient] = [
+            "value" => $value,
+            "expiration" => $expiration > 0 ? time() + $expiration : 0,
+        ];
+        return true;
+    }
+}
+
+if (!function_exists("delete_transient")) {
+    /**
+     * Mock delete_transient function for tests
+     *
+     * @param string $transient Transient name
+     * @return bool Always returns true
+     */
+    function delete_transient(string $transient): bool
+    {
+        global $wp_mock_transients;
+        unset($wp_mock_transients[$transient]);
+        return true;
+    }
+}
+
+// HTTP API functions (functional implementations using PHP streams)
+if (!function_exists("wp_remote_get")) {
+    /**
+     * Mock wp_remote_get function for tests
+     *
+     * Uses PHP file_get_contents with stream context to make real HTTP
+     * requests, mimicking WordPress wp_remote_get() response format.
+     *
+     * @param string               $url  URL to fetch
+     * @param array<string, mixed> $args Request arguments
+     * @return array<string, mixed>|WP_Error Response array or WP_Error on failure
+     */
+    function wp_remote_get(string $url, array $args = [])
+    {
+        $timeout = $args["timeout"] ?? 10;
+        $headers = $args["headers"] ?? [];
+
+        $httpHeaders = [];
+        foreach ($headers as $name => $value) {
+            $httpHeaders[] = "{$name}: {$value}";
+        }
+        // Add a default User-Agent if not provided
+        $hasUserAgent = false;
+        foreach ($httpHeaders as $h) {
+            if (stripos($h, "User-Agent:") === 0) {
+                $hasUserAgent = true;
+                break;
+            }
+        }
+        if (!$hasUserAgent) {
+            $httpHeaders[] = "User-Agent: WP-GitHub-Updater-Tests/1.0";
+        }
+
+        $context = stream_context_create([
+            "http" => [
+                "method" => "GET",
+                "header" => implode("\r\n", $httpHeaders),
+                "timeout" => $timeout,
+                "ignore_errors" => true,
+            ],
+            "ssl" => [
+                "verify_peer" => true,
+                "verify_peer_name" => true,
+            ],
+        ]);
+
+        $body = @file_get_contents($url, false, $context);
+
+        if ($body === false) {
+            return new WP_Error(
+                "http_request_failed",
+                "Failed to fetch URL: {$url}"
+            );
+        }
+
+        // Parse response headers from $http_response_header
+        $statusCode = 200;
+        $responseHeaders = [];
+        if (isset($http_response_header) && is_array($http_response_header)) {
+            foreach ($http_response_header as $header) {
+                if (preg_match("#^HTTP/\d+\.?\d*\s+(\d+)#", $header, $matches)) {
+                    $statusCode = (int) $matches[1];
+                } elseif (strpos($header, ":") !== false) {
+                    [$name, $value] = explode(":", $header, 2);
+                    $responseHeaders[strtolower(trim($name))] = trim($value);
+                }
+            }
+        }
+
+        return [
+            "headers" => $responseHeaders,
+            "body" => $body,
+            "response" => [
+                "code" => $statusCode,
+                "message" => "",
+            ],
+            "cookies" => [],
+        ];
+    }
+}
+
+if (!function_exists("wp_remote_retrieve_response_code")) {
+    /**
+     * Mock wp_remote_retrieve_response_code function for tests
+     *
+     * @param array<string, mixed>|WP_Error $response HTTP response array
+     * @return int|string Response code or empty string on failure
+     */
+    function wp_remote_retrieve_response_code($response)
+    {
+        if (is_wp_error($response) || !is_array($response)) {
+            return "";
+        }
+        return $response["response"]["code"] ?? "";
+    }
+}
+
+if (!function_exists("wp_remote_retrieve_body")) {
+    /**
+     * Mock wp_remote_retrieve_body function for tests
+     *
+     * @param array<string, mixed>|WP_Error $response HTTP response array
+     * @return string Response body or empty string on failure
+     */
+    function wp_remote_retrieve_body($response): string
+    {
+        if (is_wp_error($response) || !is_array($response)) {
+            return "";
+        }
+        return $response["body"] ?? "";
+    }
+}
+
+if (!function_exists("wp_remote_retrieve_headers")) {
+    /**
+     * Mock wp_remote_retrieve_headers function for tests
+     *
+     * @param array<string, mixed>|WP_Error $response HTTP response array
+     * @return array<string, string> Response headers or empty array on failure
+     */
+    function wp_remote_retrieve_headers($response): array
+    {
+        if (is_wp_error($response) || !is_array($response)) {
+            return [];
+        }
+        return $response["headers"] ?? [];
+    }
+}

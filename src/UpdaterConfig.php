@@ -7,7 +7,7 @@
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.3.0
+ * @version 1.3.1
  * @license PolyForm-Noncommercial-1.0.0
  */
 
