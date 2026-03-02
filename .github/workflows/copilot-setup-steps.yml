@@ -1,0 +1,122 @@
+# ============================================================================
+# GitHub Copilot Coding Agent Setup Steps
+# ============================================================================
+#
+# Purpose:
+#   Pre-install Composer dependencies BEFORE Copilot Coding Agent's firewall
+#   is activated. This prevents firewall warnings and ensures all PHP
+#   dependencies are available during agent sessions.
+#
+# Why This Works:
+#   - Setup steps run BEFORE the firewall is enabled
+#   - Dependencies are cached and available during agent work
+#   - No allowlist maintenance required for api.github.com URLs
+#   - GitHub recommended best practice for dependency installation
+#
+# Blocked URLs (examples):
+#   - api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/*
+#   - api.github.com/repos/phpstan/phpstan/zipball/*
+#   - api.github.com/repos/phpunit/phpunit/zipball/*
+#   - api.github.com/repos/SilverAssist/wp-github-updater/zipball/*
+#   - ... and many more GitHub-hosted Composer packages
+#
+# Documentation:
+#   https://docs.github.com/en/copilot/customizing-copilot/customizing-the-development-environment-for-copilot-coding-agent
+#
+# ============================================================================
+
+name: Copilot Setup Steps
+
+on:
+    workflow_dispatch:
+
+jobs:
+    copilot-setup-steps:
+        name: 🔧 Setup PHP Dependencies for Copilot Agent
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+
+        steps:
+            - name: 📥 Checkout repository
+              uses: actions/checkout@v4
+
+            - name: 🐘 Setup PHP 8.2
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.2'
+                  extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, sodium
+                  tools: composer:v2
+                  coverage: none
+
+            - name: 📦 Cache Composer dependencies
+              uses: actions/cache@v4
+              with:
+                  path: vendor
+                  key: composer-copilot-${{ hashFiles('composer.lock') }}
+                  restore-keys: |
+                      composer-copilot-
+
+            - name: 🎼 Install Composer dependencies
+              run: |
+                  echo "🎼 Installing Composer dependencies..."
+                  composer install --no-interaction --prefer-dist --optimize-autoloader
+                  echo "✅ Composer dependencies installed successfully"
+
+            - name: ✅ Verify installation
+              run: |
+                  echo "🔍 Verifying installed tools..."
+                  
+                  # Check PHPCS
+                  if [ -f "vendor/bin/phpcs" ]; then
+                      echo "✅ PHPCS installed: $(vendor/bin/phpcs --version)"
+                  else
+                      echo "❌ PHPCS not found"
+                      exit 1
+                  fi
+                  
+                  # Check PHPStan
+                  if [ -f "vendor/bin/phpstan" ]; then
+                      echo "✅ PHPStan installed: $(vendor/bin/phpstan --version)"
+                  else
+                      echo "❌ PHPStan not found"
+                      exit 1
+                  fi
+                  
+                  # Check PHPUnit
+                  if [ -f "vendor/bin/phpunit" ]; then
+                      echo "✅ PHPUnit installed: $(vendor/bin/phpunit --version)"
+                  else
+                      echo "❌ PHPUnit not found"
+                      exit 1
+                  fi
+                  
+                  echo ""
+                  echo "🎉 All required tools are installed and ready for Copilot Coding Agent!"
+
+            - name: 📊 Summary
+              run: |
+                  echo "## 🎉 Copilot Setup Complete" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "All Composer dependencies have been pre-installed for the Copilot Coding Agent." >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### ✅ Available Tools" >> $GITHUB_STEP_SUMMARY
+                  echo "- **PHPCS** - WordPress Coding Standards checker (WordPress-Extra)" >> $GITHUB_STEP_SUMMARY
+                  echo "- **PHPStan** - Static analysis tool (Level 8)" >> $GITHUB_STEP_SUMMARY
+                  echo "- **PHPUnit** - Unit and integration testing framework" >> $GITHUB_STEP_SUMMARY
+                  echo "- **PHP Stubs** - WordPress and Contact Form 7 stubs" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 📦 Plugin Dependencies" >> $GITHUB_STEP_SUMMARY
+                  echo "- **wp-github-updater** - GitHub-based plugin updates" >> $GITHUB_STEP_SUMMARY
+                  echo "- **wp-settings-hub** - Settings framework" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 🚀 Agent Can Now Run" >> $GITHUB_STEP_SUMMARY
+                  echo '```bash' >> $GITHUB_STEP_SUMMARY
+                  echo 'composer phpcs      # Code quality checks' >> $GITHUB_STEP_SUMMARY
+                  echo 'composer phpstan    # Static analysis (Level 8)' >> $GITHUB_STEP_SUMMARY
+                  echo 'composer test       # Run PHPUnit tests' >> $GITHUB_STEP_SUMMARY
+                  echo 'composer phpcbf     # Auto-fix code style' >> $GITHUB_STEP_SUMMARY
+                  echo 'composer check      # Run all checks' >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**No firewall warnings expected during Copilot Coding Agent sessions!** ✨" >> $GITHUB_STEP_SUMMARY
