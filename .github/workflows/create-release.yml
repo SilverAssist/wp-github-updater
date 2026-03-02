@@ -88,6 +88,11 @@ jobs:
                     exit 1
                   fi
                   
+                  if [ ! -f "assets/js/check-updates.js" ]; then
+                    echo "❌ Missing asset file: assets/js/check-updates.js"
+                    exit 1
+                  fi
+                  
                   # Verify version consistency in composer.json
                   COMPOSER_VERSION=$(grep '"version"' composer.json | head -n1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
                   if [ "$COMPOSER_VERSION" != "$VERSION" ]; then
@@ -177,16 +182,20 @@ jobs:
 
                   // Configure the updater
                   \$config = new UpdaterConfig(__FILE__, 'owner/repository', [
-                      'text_domain' => 'my-plugin-textdomain', // v1.1.0+ feature
+                      'text_domain' => 'my-plugin-textdomain',
                   ]);
 
                   // Initialize the updater
                   \$updater = new Updater(\$config);
+
+                  // Built-in update check button (v1.3.0+)
+                  echo '<button onclick="' . \$updater->enqueueCheckUpdatesScript() . '">Check Updates</button>';
                   \`\`\`
 
                   ## ✨ Key Features
                   - 🔄 Automatic WordPress plugin updates from GitHub releases
-                  - 🌍 Configurable internationalization (i18n) support
+                  - � Built-in "Check Updates" JavaScript with admin notices (v1.3.0+)
+                  - �🌍 Configurable internationalization (i18n) support
                   - 📋 WordPress admin integration with update notifications
                   - 🔒 Secure GitHub API communication with proper error handling
                   - ⚡ Efficient caching system for version checks
@@ -228,6 +237,7 @@ jobs:
 
                   ## Package Contents
                   - Core updater classes (\`src/Updater.php\`, \`src/UpdaterConfig.php\`)
+                  - Built-in JavaScript assets (\`assets/js/check-updates.js\`)
                   - Comprehensive test suite (\`tests/\`)
                   - Integration examples (\`examples/\`)
                   - Documentation ([README.md](README.md), [CHANGELOG.md](CHANGELOG.md))
@@ -248,6 +258,7 @@ jobs:
 
                   ## Key Features
                   - Automatic WordPress plugin updates from GitHub releases
+                  - Built-in "Check Updates" JavaScript with admin notices (v1.3.0+)
                   - Configurable internationalization (i18n) support
                   - WordPress admin dashboard integration
                   - Secure GitHub API communication
@@ -268,6 +279,9 @@ jobs:
 
                   // Initialize the updater
                   \$updater = new Updater(\$config);
+
+                  // Built-in update check button (v1.3.0+)
+                  echo '<button onclick="' . \$updater->enqueueCheckUpdatesScript() . '">Check Updates</button>';
                   \`\`\`
 
                   ## Support & Documentation
@@ -304,6 +318,7 @@ jobs:
                   echo "- 🔄 Automatic WordPress plugin updates from GitHub" >> $GITHUB_STEP_SUMMARY
                   echo "- 🌍 Configurable internationalization support" >> $GITHUB_STEP_SUMMARY
                   echo "- 📋 WordPress admin dashboard integration" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🎨 Built-in Check Updates JavaScript (v1.3.0+)" >> $GITHUB_STEP_SUMMARY
                   echo "- 🔒 Secure GitHub API communication" >> $GITHUB_STEP_SUMMARY
                   echo "- ⚡ Efficient caching system" >> $GITHUB_STEP_SUMMARY
                   echo "- 🎯 Modern PHP 8+ architecture" >> $GITHUB_STEP_SUMMARY

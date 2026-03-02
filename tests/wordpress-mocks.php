@@ -221,8 +221,13 @@ if (!function_exists("wp_enqueue_script")) {
      * @param bool             $in_footer Load in footer
      * @return void
      */
-    function wp_enqueue_script(string $handle, string $src = "", array $deps = [], $ver = false, bool $in_footer = false): void
-    {
+    function wp_enqueue_script(
+        string $handle,
+        string $src = "",
+        array $deps = [],
+        $ver = false,
+        bool $in_footer = false
+    ): void {
         // Mock - do nothing in tests
     }
 }
