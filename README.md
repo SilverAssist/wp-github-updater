@@ -17,6 +17,7 @@ A reusable WordPress plugin updater that handles automatic updates from public G
 - 📢 **Admin Notices**: WordPress admin notifications for available updates
 - 🗂️ **Enhanced File Handling**: Multi-tier temporary file creation to resolve hosting issues
 - ✅ **Manual Version Checks**: AJAX-powered manual update checking with immediate admin feedback
+- 🎨 **Built-in JavaScript** (v1.3.0+): Complete update check UI with no custom code needed
 
 ## Installation
 
@@ -122,7 +123,96 @@ If your plugin slug is `my-awesome-plugin` and version is `1.2.3`:
 
 ## Manual Version Check
 
-The updater provides AJAX endpoints for manual version checking:
+The updater provides AJAX endpoints for manual version checking. Starting with **version 1.3.0**, the package includes a built-in JavaScript solution that eliminates the need for custom scripts in consuming plugins.
+
+### Built-in Check Updates Script (v1.3.0+)
+
+The package now includes a complete JavaScript solution for manual update checks. Simply call `enqueueCheckUpdatesScript()` to get a one-liner that handles everything:
+
+```php
+// In your plugin's admin settings page or Settings Hub integration
+public function render_update_check_button(): void {
+    echo '<button onclick="' . $this->updater->enqueueCheckUpdatesScript() . '">Check Updates</button>';
+}
+```
+
+**That's it!** No need to:
+- Create your own JavaScript file
+- Manually enqueue scripts
+- Handle `wp_localize_script` calls
+- Duplicate admin notice logic
+- Manage i18n strings
+
+#### How It Works
+
+The `enqueueCheckUpdatesScript()` method:
+
+1. **Enqueues the shared JavaScript file** (`assets/js/check-updates.js`) - loaded once even if multiple plugins use it
+2. **Localizes plugin-specific data** - unique global variable per plugin to avoid conflicts
+3. **Returns inline JavaScript** - ready to use in `onclick` attributes or `<script>` tags
+4. **Handles all i18n strings** - uses your plugin's text domain automatically
+5. **Shows WordPress admin notices** - success, error, warning, and info messages
+6. **Redirects on updates** - automatically redirects to Updates page when an update is available
+
+#### Advanced Usage with Custom Strings
+
+You can override default i18n strings if needed:
+
+```php
+$customStrings = [
+    "checking"        => $this->__("Verifying latest version..."),
+    "updateAvailable" => $this->__("New version %s is available! Redirecting..."),
+    "upToDate"        => $this->__("Your plugin is up to date!"),
+    "checkError"      => $this->__("Could not check for updates. Try again later."),
+    "connectError"    => $this->__("Connection error. Check your internet."),
+    "configError"     => $this->__("Configuration error occurred."),
+];
+
+echo '<button onclick="' . $this->updater->enqueueCheckUpdatesScript($customStrings) . '">Check Updates</button>';
+```
+
+#### Multi-Plugin Support
+
+The built-in script works perfectly when multiple plugins using `wp-github-updater` are active on the same page. Each plugin gets its own:
+
+- Unique global variable name (e.g., `wpGithubUpdater_my_plugin`)
+- Separate AJAX configuration
+- Independent admin notices
+- Isolated error handling
+
+**Example**: If you have both `silver-assist-security` and `contact-form-to-api` using the updater, each gets its own check-updates button that works independently without conflicts.
+
+#### Migration from Custom Scripts
+
+**Before** (custom per-plugin implementation):
+
+```php
+// ~40 lines of PHP + ~120 lines of JavaScript
+public function render_update_check_script(): void {
+    wp_enqueue_script('my-plugin-check-updates', plugins_url('js/check-updates.js'), ['jquery'], '1.0.0', true);
+    wp_localize_script('my-plugin-check-updates', 'myPluginCheckUpdatesData', [
+        'ajaxurl'   => admin_url('admin-ajax.php'),
+        'nonce'     => wp_create_nonce('my_plugin_nonce'),
+        'action'    => 'my_plugin_check_version',
+        'updateUrl' => admin_url('update-core.php'),
+        'strings'   => [ /* i18n strings */ ],
+    ]);
+    echo 'myPluginCheckUpdates(); return false;';
+}
+```
+
+**After** (using built-in script):
+
+```php
+// 1 line
+public function render_update_check_script(): void {
+    echo $this->updater->enqueueCheckUpdatesScript();
+}
+```
+
+### Legacy Manual AJAX Implementation
+
+If you need more control or are maintaining existing code, you can still implement manual AJAX calls:
 
 ```javascript
 // Frontend JavaScript example

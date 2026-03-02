@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.0] - 2026-03-02
+
+### Added
+- **Built-in "Check Updates" JavaScript**: New `enqueueCheckUpdatesScript()` method that provides a complete update check solution without requiring consuming plugins to maintain their own JavaScript files
+- **Asset Management**: New `getPackageAssetUrl()` method to resolve URLs for package assets in vendor directory
+- **JavaScript Variable Sanitization**: New `sanitizeJsVarName()` method to create valid JavaScript variable names from plugin basenames
+- **Multi-Plugin Support**: Unique global variable names per plugin prevent conflicts when multiple plugins using the updater are active on the same page
+- **Centralized i18n Strings**: Built-in translatable strings for update check messages with override capability
+- **WordPress Admin Notices**: Automatic admin notice display for update check results (checking, available, up-to-date, errors)
+- **Auto-Redirect**: Automatic redirect to WordPress Updates page when updates are available
+
+### Changed
+- **Simplified Integration**: Consuming plugins can now use a single method call (`enqueueCheckUpdatesScript()`) instead of maintaining ~40 lines of PHP and ~120 lines of JavaScript
+- **Consistent Behavior**: Standardized update check behavior across all plugins using the package
+- **Documentation**: Comprehensive README updates with usage examples, migration guide, and multi-plugin support details
+
+### Benefits
+- **Eliminates Code Duplication**: No need for per-plugin JavaScript files and AJAX handling code
+- **Prevents Conflicts**: Unique data keys ensure multiple plugins can coexist without interference
+- **Easier Maintenance**: Bug fixes and improvements are centralized in the package
+- **Better UX**: Consistent, polished update check experience across all consuming plugins
+
 ## [1.2.1] - 2025-10-11
 
 ### Changed
