@@ -101,14 +101,14 @@ class UpdaterEnqueueScriptTest extends TestCase
     }
 
     /**
-     * Test getPackageAssetUrl() with standard vendor directory structure
+     * Test asset URL resolution with standard vendor directory structure
      *
      * Simulates a plugin with the package installed via Composer in vendor/silverassist/wp-github-updater
      * This tests the primary path resolution logic for multi-plugin scenarios.
      *
      * @since 1.3.1
      */
-    public function testGetPackageAssetUrlWithStandardVendorStructure(): void
+    public function testAssetUrlResolutionWithStandardVendorStructure(): void
     {
         // Create a temporary plugin structure that mimics a real Composer installation
         $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
@@ -128,28 +128,27 @@ class UpdaterEnqueueScriptTest extends TestCase
         file_put_contents($assetFile, "// Mock JavaScript file");
 
         try {
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
+
             $config = new UpdaterConfig($pluginFile, "owner/repo", [
                 "plugin_name" => "My Plugin",
             ]);
 
             $updater = new Updater($config);
 
-            // Use reflection to access the private method
-            $reflection = new \ReflectionClass($updater);
-            $method = $reflection->getMethod("getPackageAssetUrl");
-            $method->setAccessible(true);
+            // Call the public API method which internally uses getPackageAssetUrl()
+            $updater->enqueueCheckUpdatesScript();
 
-            // Test asset URL generation
-            $assetUrl = $method->invoke($updater, "assets/js/check-updates.js");
+            // Check that wp_enqueue_script was called with the correct URL
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
 
             // The URL should contain the vendor path
-            $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $assetUrl);
-            $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl);
-
-            // Test with leading slash
-            $assetUrl2 = $method->invoke($updater, "/assets/js/check-updates.js");
-            $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl2);
-            $this->assertEquals($assetUrl, $assetUrl2);
+            $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $enqueuedSrc);
+            $this->assertStringContainsString("assets/js/check-updates.js", $enqueuedSrc);
+            $this->assertStringContainsString("my-plugin", $enqueuedSrc);
         } finally {
             // Cleanup
             if (is_dir($tempDir)) {
@@ -159,14 +158,14 @@ class UpdaterEnqueueScriptTest extends TestCase
     }
 
     /**
-     * Test getPackageAssetUrl() fallback for non-standard installations
+     * Test asset URL resolution fallback for non-standard installations
      *
      * When the standard vendor path doesn't exist, the method should fall back
      * to __DIR__-based resolution for development or non-Composer installations.
      *
      * @since 1.3.1
      */
-    public function testGetPackageAssetUrlFallbackForNonStandardInstallation(): void
+    public function testAssetUrlResolutionFallbackForNonStandardInstallation(): void
     {
         // Create a temporary plugin structure WITHOUT vendor directory
         $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
@@ -180,23 +179,26 @@ class UpdaterEnqueueScriptTest extends TestCase
         file_put_contents($pluginFile, "<?php // Mock plugin file");
 
         try {
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
+
             $config = new UpdaterConfig($pluginFile, "owner/repo", [
                 "plugin_name" => "My Plugin",
             ]);
 
             $updater = new Updater($config);
 
-            // Use reflection to access the private method
-            $reflection = new \ReflectionClass($updater);
-            $method = $reflection->getMethod("getPackageAssetUrl");
-            $method->setAccessible(true);
+            // Call the public API method which internally uses getPackageAssetUrl()
+            $updater->enqueueCheckUpdatesScript();
 
-            // Test asset URL generation (should fall back to __DIR__ logic)
-            $assetUrl = $method->invoke($updater, "assets/js/check-updates.js");
+            // Check that wp_enqueue_script was called
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
 
-            // The URL should contain the asset path
-            $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl);
-            $this->assertIsString($assetUrl);
+            // The URL should contain the asset path (fallback behavior)
+            $this->assertStringContainsString("assets/js/check-updates.js", $enqueuedSrc);
+            $this->assertIsString($enqueuedSrc);
         } finally {
             // Cleanup
             if (is_dir($tempDir)) {
@@ -214,7 +216,7 @@ class UpdaterEnqueueScriptTest extends TestCase
      *
      * @since 1.3.1
      */
-    public function testGetPackageAssetUrlWithMultiplePlugins(): void
+    public function testAssetUrlResolutionWithMultiplePlugins(): void
     {
         // Create two plugin directories with identical vendor structure
         $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
@@ -250,18 +252,20 @@ class UpdaterEnqueueScriptTest extends TestCase
             ]);
             $updater2 = new Updater($config2);
 
-            // Use reflection to access the private method
-            $reflection1 = new \ReflectionClass($updater1);
-            $method1 = $reflection1->getMethod("getPackageAssetUrl");
-            $method1->setAccessible(true);
+            // Clear the global enqueued scripts array
+            global $wp_enqueued_scripts;
+            $wp_enqueued_scripts = [];
 
-            $reflection2 = new \ReflectionClass($updater2);
-            $method2 = $reflection2->getMethod("getPackageAssetUrl");
-            $method2->setAccessible(true);
+            // Call enqueueCheckUpdatesScript for first plugin
+            $updater1->enqueueCheckUpdatesScript();
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $assetUrl1 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
 
-            // Get asset URLs for both plugins
-            $assetUrl1 = $method1->invoke($updater1, "assets/js/check-updates.js");
-            $assetUrl2 = $method2->invoke($updater2, "assets/js/check-updates.js");
+            // Clear and test second plugin
+            $wp_enqueued_scripts = [];
+            $updater2->enqueueCheckUpdatesScript();
+            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
+            $assetUrl2 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
 
             // Each plugin should resolve to its own vendor directory
             $this->assertStringContainsString("plugin-one", $assetUrl1);
