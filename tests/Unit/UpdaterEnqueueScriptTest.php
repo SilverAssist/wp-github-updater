@@ -128,9 +128,8 @@ class UpdaterEnqueueScriptTest extends TestCase
         file_put_contents($assetFile, "// Mock JavaScript file");
 
         try {
-            // Clear the global enqueued scripts array
-            global $wp_enqueued_scripts;
-            $wp_enqueued_scripts = [];
+            // Clear enqueued scripts (works with both mock and real WordPress)
+            $this->clearEnqueuedScripts();
 
             $config = new UpdaterConfig($pluginFile, "owner/repo", [
                 "plugin_name" => "My Plugin",
@@ -142,8 +141,8 @@ class UpdaterEnqueueScriptTest extends TestCase
             $updater->enqueueCheckUpdatesScript();
 
             // Check that wp_enqueue_script was called with the correct URL
-            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
-            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+            $enqueuedSrc = $this->getEnqueuedScriptSrc("wp-github-updater-check");
+            $this->assertNotNull($enqueuedSrc, "Script 'wp-github-updater-check' should be enqueued");
 
             // The URL should contain the vendor path
             $this->assertStringContainsString("vendor/silverassist/wp-github-updater", $enqueuedSrc);
@@ -151,6 +150,7 @@ class UpdaterEnqueueScriptTest extends TestCase
             $this->assertStringContainsString("my-plugin", $enqueuedSrc);
         } finally {
             // Cleanup
+            $this->clearEnqueuedScripts();
             if (is_dir($tempDir)) {
                 $this->recursiveRemoveDirectory($tempDir);
             }
@@ -179,9 +179,8 @@ class UpdaterEnqueueScriptTest extends TestCase
         file_put_contents($pluginFile, "<?php // Mock plugin file");
 
         try {
-            // Clear the global enqueued scripts array
-            global $wp_enqueued_scripts;
-            $wp_enqueued_scripts = [];
+            // Clear enqueued scripts (works with both mock and real WordPress)
+            $this->clearEnqueuedScripts();
 
             $config = new UpdaterConfig($pluginFile, "owner/repo", [
                 "plugin_name" => "My Plugin",
@@ -193,14 +192,15 @@ class UpdaterEnqueueScriptTest extends TestCase
             $updater->enqueueCheckUpdatesScript();
 
             // Check that wp_enqueue_script was called
-            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
-            $enqueuedSrc = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+            $enqueuedSrc = $this->getEnqueuedScriptSrc("wp-github-updater-check");
+            $this->assertNotNull($enqueuedSrc, "Script 'wp-github-updater-check' should be enqueued");
 
             // The URL should contain the asset path (fallback behavior)
             $this->assertStringContainsString("assets/js/check-updates.js", $enqueuedSrc);
             $this->assertIsString($enqueuedSrc);
         } finally {
             // Cleanup
+            $this->clearEnqueuedScripts();
             if (is_dir($tempDir)) {
                 $this->recursiveRemoveDirectory($tempDir);
             }
@@ -252,20 +252,19 @@ class UpdaterEnqueueScriptTest extends TestCase
             ]);
             $updater2 = new Updater($config2);
 
-            // Clear the global enqueued scripts array
-            global $wp_enqueued_scripts;
-            $wp_enqueued_scripts = [];
+            // Clear enqueued scripts (works with both mock and real WordPress)
+            $this->clearEnqueuedScripts();
 
             // Call enqueueCheckUpdatesScript for first plugin
             $updater1->enqueueCheckUpdatesScript();
-            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
-            $assetUrl1 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+            $assetUrl1 = $this->getEnqueuedScriptSrc("wp-github-updater-check");
+            $this->assertNotNull($assetUrl1, "Script 'wp-github-updater-check' should be enqueued for plugin 1");
 
             // Clear and test second plugin
-            $wp_enqueued_scripts = [];
+            $this->clearEnqueuedScripts();
             $updater2->enqueueCheckUpdatesScript();
-            $this->assertArrayHasKey("wp-github-updater-check", $wp_enqueued_scripts);
-            $assetUrl2 = $wp_enqueued_scripts["wp-github-updater-check"]["src"];
+            $assetUrl2 = $this->getEnqueuedScriptSrc("wp-github-updater-check");
+            $this->assertNotNull($assetUrl2, "Script 'wp-github-updater-check' should be enqueued for plugin 2");
 
             // Each plugin should resolve to its own vendor directory
             $this->assertStringContainsString("plugin-one", $assetUrl1);
@@ -282,9 +281,51 @@ class UpdaterEnqueueScriptTest extends TestCase
             $this->assertStringContainsString("assets/js/check-updates.js", $assetUrl2);
         } finally {
             // Cleanup
+            $this->clearEnqueuedScripts();
             if (is_dir($tempDir)) {
                 $this->recursiveRemoveDirectory($tempDir);
             }
+        }
+    }
+
+    /**
+     * Get the src URL of an enqueued script, compatible with both mock and real WordPress
+     *
+     * @param string $handle Script handle
+     * @return string|null The script source URL, or null if not found
+     */
+    private function getEnqueuedScriptSrc(string $handle): ?string
+    {
+        // Check mock global first (used in non-WordPress test environment)
+        global $wp_enqueued_scripts;
+        if (isset($wp_enqueued_scripts[$handle])) {
+            return $wp_enqueued_scripts[$handle]["src"];
+        }
+
+        // Check WordPress's real registered scripts (WordPress integration test environment)
+        if (function_exists("wp_scripts")) {
+            $scripts = \wp_scripts();
+            if (isset($scripts->registered[$handle])) {
+                return $scripts->registered[$handle]->src;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Clear enqueued scripts state, compatible with both mock and real WordPress
+     *
+     * @return void
+     */
+    private function clearEnqueuedScripts(): void
+    {
+        global $wp_enqueued_scripts;
+        $wp_enqueued_scripts = [];
+
+        // In real WordPress environment, deregister the script so it can be re-registered
+        if (function_exists("wp_deregister_script")) {
+            \wp_deregister_script("wp-github-updater-check");
         }
     }
 
