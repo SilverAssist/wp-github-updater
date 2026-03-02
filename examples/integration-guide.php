@@ -201,6 +201,50 @@ define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
  */
 
 /**
+ * New Features in v1.3.0:
+ *
+ * - Built-in "Check Updates" JavaScript with enqueueCheckUpdatesScript() method
+ * - Complete update check UI with no custom code needed
+ * - Multi-plugin support with unique global variables
+ * - Centralized i18n strings with override capability
+ * - Automatic admin notices and redirect to Updates page
+ *
+ * Example usage:
+ */
+
+/*
+// In your Settings Hub integration or admin settings page:
+
+class SettingsPage {
+    private $updater;
+    
+    public function __construct($updater) {
+        $this->updater = $updater;
+    }
+    
+    public function render_update_check_button(): void {
+        // That's it! One line to add a fully functional update check button
+        echo '<button class="button button-secondary" onclick="' . 
+             $this->updater->enqueueCheckUpdatesScript() . 
+             '">Check for Updates</button>';
+    }
+    
+    // Optional: Custom i18n strings
+    public function render_update_check_button_custom(): void {
+        $customStrings = [
+            "checking"        => __("Verifying latest version...", "my-plugin"),
+            "updateAvailable" => __("New version %s is available!", "my-plugin"),
+            "upToDate"        => __("You're using the latest version!", "my-plugin"),
+        ];
+        
+        echo '<button class="button" onclick="' . 
+             $this->updater->enqueueCheckUpdatesScript($customStrings) . 
+             '">Check Updates</button>';
+    }
+}
+*/
+
+/**
  * New Features in v1.1.4:
  *
  * - WordPress admin notices for manual version checks
