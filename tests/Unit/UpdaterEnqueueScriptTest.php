@@ -123,6 +123,10 @@ class UpdaterEnqueueScriptTest extends TestCase
         $pluginFile = $pluginDir . "/my-plugin.php";
         file_put_contents($pluginFile, "<?php // Mock plugin file");
 
+        // Create the actual asset file
+        $assetFile = $assetsDir . "/check-updates.js";
+        file_put_contents($assetFile, "// Mock JavaScript file");
+
         try {
             $config = new UpdaterConfig($pluginFile, "owner/repo", [
                 "plugin_name" => "My Plugin",
@@ -148,9 +152,6 @@ class UpdaterEnqueueScriptTest extends TestCase
             $this->assertEquals($assetUrl, $assetUrl2);
         } finally {
             // Cleanup
-            if (file_exists($pluginFile)) {
-                unlink($pluginFile);
-            }
             if (is_dir($tempDir)) {
                 $this->recursiveRemoveDirectory($tempDir);
             }
@@ -168,7 +169,7 @@ class UpdaterEnqueueScriptTest extends TestCase
     public function testGetPackageAssetUrlFallbackForNonStandardInstallation(): void
     {
         // Create a temporary plugin structure WITHOUT vendor directory
-        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid();
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
         $pluginDir = $tempDir . "/my-plugin";
 
         // Create the directory structure (no vendor dir)
@@ -198,9 +199,6 @@ class UpdaterEnqueueScriptTest extends TestCase
             $this->assertIsString($assetUrl);
         } finally {
             // Cleanup
-            if (file_exists($pluginFile)) {
-                unlink($pluginFile);
-            }
             if (is_dir($tempDir)) {
                 $this->recursiveRemoveDirectory($tempDir);
             }
@@ -219,7 +217,7 @@ class UpdaterEnqueueScriptTest extends TestCase
     public function testGetPackageAssetUrlWithMultiplePlugins(): void
     {
         // Create two plugin directories with identical vendor structure
-        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid();
+        $tempDir = sys_get_temp_dir() . "/wp-github-updater-test-" . uniqid("", true);
 
         $plugin1Dir = $tempDir . "/plugin-one";
         $vendor1Dir = $plugin1Dir . "/vendor/silverassist/wp-github-updater";
@@ -233,6 +231,12 @@ class UpdaterEnqueueScriptTest extends TestCase
         $plugin2File = $plugin2Dir . "/plugin-two.php";
         file_put_contents($plugin1File, "<?php // Plugin One");
         file_put_contents($plugin2File, "<?php // Plugin Two");
+
+        // Create the actual asset files in both plugins
+        $asset1File = $vendor1Dir . "/assets/js/check-updates.js";
+        $asset2File = $vendor2Dir . "/assets/js/check-updates.js";
+        file_put_contents($asset1File, "// Plugin One JavaScript");
+        file_put_contents($asset2File, "// Plugin Two JavaScript");
 
         try {
             // Create instances for both plugins

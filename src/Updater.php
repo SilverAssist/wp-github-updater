@@ -669,8 +669,9 @@ class Updater
         $vendorRelativePath = "vendor/silverassist/wp-github-updater";
         $fullPackagePath = $pluginDir . "/" . $vendorRelativePath;
 
-        // Verify the vendor path exists for this plugin instance
-        if (is_dir($fullPackagePath)) {
+        // Verify the vendor path exists and the asset file is present
+        $fullAssetPath = $fullPackagePath . "/" . ltrim($assetPath, "/");
+        if (is_file($fullAssetPath)) {
             return $baseUrl . "/" . $vendorRelativePath . "/" . ltrim($assetPath, "/");
         }
 
