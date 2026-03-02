@@ -634,6 +634,7 @@ class Updater
                 "checkError"      => $this->config->__("Error checking updates. Please try again."),
                 "connectError"    => $this->config->__("Error connecting to update server."),
                 "configError"     => $this->config->__("Update check configuration error."),
+                "dismissNotice"   => $this->config->__("Dismiss this notice."),
             ], $extraStrings),
         ]);
 
@@ -645,25 +646,36 @@ class Updater
      *
      * Resolves the URL to assets within the vendor/silverassist/wp-github-updater directory.
      * This handles the package being installed via Composer in the vendor directory.
+     * Uses plugin_dir_url() for compatibility with subdirectory WordPress installations.
      *
      * @param string $assetPath Relative path to asset (e.g., 'assets/js/check-updates.js')
      * @return string Full URL to the asset file
      *
      * @since 1.3.0
+     * @internal Not part of the public API - used internally by enqueueCheckUpdatesScript()
      */
     private function getPackageAssetUrl(string $assetPath): string
     {
-        // Get the package directory path
-        $packageDir = dirname(__DIR__);
+        $packageDir = \wp_normalize_path(dirname(__DIR__));
 
-        // Convert absolute path to URL relative to WordPress installation
-        $packageUrl = str_replace(
-            \wp_normalize_path(ABSPATH),
-            \site_url("/"),
-            \wp_normalize_path($packageDir)
-        );
+        // Get the plugin directory path from the configured plugin file
+        $pluginDir = \wp_normalize_path(dirname($this->config->pluginFile));
 
-        return rtrim($packageUrl, "/") . "/" . ltrim($assetPath, "/");
+        // Compute relative path from plugin directory to package directory, if possible
+        $relativePath = "";
+        if (str_starts_with($packageDir, $pluginDir)) {
+            $relativePath = trim(substr($packageDir, strlen($pluginDir)), "/");
+        }
+
+        // Build base URL from the plugin directory
+        $baseUrl = rtrim(\plugin_dir_url($this->config->pluginFile), "/");
+
+        // Append relative package directory if it exists
+        if ($relativePath !== "") {
+            $baseUrl .= "/" . $relativePath;
+        }
+
+        return $baseUrl . "/" . ltrim($assetPath, "/");
     }
 
     /**
@@ -676,6 +688,7 @@ class Updater
      * @return string Valid JavaScript variable name
      *
      * @since 1.3.0
+     * @internal Not part of the public API - used internally by enqueueCheckUpdatesScript()
      */
     private function sanitizeJsVarName(string $name): string
     {

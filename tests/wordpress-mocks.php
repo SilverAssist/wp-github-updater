@@ -181,11 +181,11 @@ if (!function_exists("site_url")) {
     /**
      * Mock site_url function for tests
      *
-     * @param string $path   Path relative to site URL
-     * @param string $scheme URL scheme
+     * @param string      $path   Path relative to site URL
+     * @param string|null $scheme URL scheme
      * @return string Site URL
      */
-    function site_url(string $path = "", string $scheme = null): string
+    function site_url(string $path = "", ?string $scheme = null): string
     {
         return "http://example.com/" . ltrim($path, "/");
     }
@@ -258,5 +258,19 @@ if (!function_exists("wp_create_nonce")) {
     function wp_create_nonce($action = -1): string
     {
         return "test_nonce_" . md5((string) $action);
+    }
+}
+
+if (!function_exists("plugin_dir_url")) {
+    /**
+     * Mock plugin_dir_url function for tests
+     *
+     * @param string $file Plugin file path
+     * @return string Plugin directory URL with trailing slash
+     */
+    function plugin_dir_url(string $file): string
+    {
+        $pluginDir = basename(dirname($file));
+        return "http://example.com/wp-content/plugins/" . $pluginDir . "/";
     }
 }

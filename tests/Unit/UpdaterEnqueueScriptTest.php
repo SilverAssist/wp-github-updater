@@ -41,7 +41,7 @@ class UpdaterEnqueueScriptTest extends TestCase
         $this->assertStringContainsString("return false", $result);
 
         // Should contain a valid JS variable name (sanitized plugin basename)
-        $this->assertRegExp("/wpGithubUpdaterCheckUpdates\('[a-zA-Z0-9_$]+'\)/", $result);
+        $this->assertMatchesRegularExpression("/wpGithubUpdaterCheckUpdates\('[a-zA-Z0-9_$]+\'\)/", $result);
     }
 
     public function testEnqueueCheckUpdatesScriptWithExtraStrings(): void
@@ -78,8 +78,7 @@ class UpdaterEnqueueScriptTest extends TestCase
         $this->assertStringContainsString("wpGithubUpdaterCheckUpdates", $result);
 
         // Should not contain any invalid JavaScript characters in the variable name
-        // Use assertNotRegExp for PHPUnit 8.x compatibility
-        $this->assertNotRegExp("/wpGithubUpdaterCheckUpdates\('[^a-zA-Z0-9_$']+'\)/", $result);
+        $this->assertDoesNotMatchRegularExpression("/wpGithubUpdaterCheckUpdates\('[^a-zA-Z0-9_$']+\'\)/", $result);
     }
 
     /**
