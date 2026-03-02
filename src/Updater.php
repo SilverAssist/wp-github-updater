@@ -648,6 +648,11 @@ class Updater
      * This handles the package being installed via Composer in the vendor directory.
      * Uses plugin_dir_url() for compatibility with subdirectory WordPress installations.
      *
+     * MULTI-PLUGIN SUPPORT: Uses $this->config->pluginFile instead of __DIR__ to ensure
+     * correct path resolution when multiple plugins share the same autoloaded class.
+     * PHP's autoloader loads the class from the first registered vendor directory, but
+     * each plugin instance needs to load assets from its own vendor directory.
+     *
      * @param string $assetPath Relative path to asset (e.g., 'assets/js/check-updates.js')
      * @return string Full URL to the asset file
      *
@@ -656,21 +661,26 @@ class Updater
      */
     private function getPackageAssetUrl(string $assetPath): string
     {
-        $packageDir = \wp_normalize_path(dirname(__DIR__));
-
         // Get the plugin directory path from the configured plugin file
         $pluginDir = \wp_normalize_path(dirname($this->config->pluginFile));
+        $baseUrl = rtrim(\plugin_dir_url($this->config->pluginFile), "/");
 
-        // Compute relative path from plugin directory to package directory, if possible
+        // Standard Composer vendor path for this package
+        $vendorRelativePath = "vendor/silverassist/wp-github-updater";
+        $fullPackagePath = $pluginDir . "/" . $vendorRelativePath;
+
+        // Verify the vendor path exists for this plugin instance
+        if (is_dir($fullPackagePath)) {
+            return $baseUrl . "/" . $vendorRelativePath . "/" . ltrim($assetPath, "/");
+        }
+
+        // Fallback: use __DIR__ resolution (for non-standard installations or development)
+        $packageDir = \wp_normalize_path(dirname(__DIR__));
         $relativePath = "";
         if (str_starts_with($packageDir, $pluginDir)) {
             $relativePath = trim(substr($packageDir, strlen($pluginDir)), "/");
         }
 
-        // Build base URL from the plugin directory
-        $baseUrl = rtrim(\plugin_dir_url($this->config->pluginFile), "/");
-
-        // Append relative package directory if it exists
         if ($relativePath !== "") {
             $baseUrl .= "/" . $relativePath;
         }
