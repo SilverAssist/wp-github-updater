@@ -28,7 +28,7 @@ jobs:
       - name: Dependabot metadata
         if: steps.check-actor.outputs.is_dependabot == 'true'
         id: metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@v3
 
       - name: Auto-merge PR
         if: |
