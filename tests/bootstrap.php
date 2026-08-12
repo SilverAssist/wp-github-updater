@@ -49,7 +49,8 @@ if ($_wp_tests_available) {
      *
      * This loads our mock plugin that integrates the WP GitHub Updater package
      * into a WordPress environment for real integration testing.
-     * @return mixed
+     *
+     * @return void
      */
     function _manually_load_plugin()
     {
