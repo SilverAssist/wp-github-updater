@@ -16,11 +16,21 @@ class UpdaterEnqueueScriptTest extends TestCase
 {
     private static string $testPluginFile;
 
+    /**
+     * Resolve the shared test plugin fixture path once for the whole class.
+     *
+     * @return void
+     */
     public static function setUpBeforeClass(): void
     {
         self::$testPluginFile = dirname(__DIR__) . "/fixtures/test-plugin.php";
     }
 
+    /**
+     * Test that enqueueCheckUpdatesScript returns valid JavaScript.
+     *
+     * @return void
+     */
     public function testEnqueueCheckUpdatesScriptReturnsValidJavaScript(): void
     {
         $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", [
@@ -44,6 +54,11 @@ class UpdaterEnqueueScriptTest extends TestCase
         $this->assertMatchesRegularExpression("/wpGithubUpdaterCheckUpdates\('[a-zA-Z0-9_$]+\'\)/", $result);
     }
 
+    /**
+     * Test that enqueueCheckUpdatesScript honors extra translated strings.
+     *
+     * @return void
+     */
     public function testEnqueueCheckUpdatesScriptWithExtraStrings(): void
     {
         $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", [
@@ -64,6 +79,12 @@ class UpdaterEnqueueScriptTest extends TestCase
         $this->assertStringContainsString("wpGithubUpdaterCheckUpdates", $result);
     }
 
+    /**
+     * Test that enqueueCheckUpdatesScript derives its JS variable name from
+     * the plugin basename.
+     *
+     * @return void
+     */
     public function testEnqueueCheckUpdatesScriptUsesPluginBasename(): void
     {
         $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", [
@@ -83,6 +104,7 @@ class UpdaterEnqueueScriptTest extends TestCase
 
     /**
      * Test that the method can be called multiple times without errors
+     * @return void
      */
     public function testEnqueueCheckUpdatesScriptCanBeCalledMultipleTimes(): void
     {
@@ -107,6 +129,7 @@ class UpdaterEnqueueScriptTest extends TestCase
      * This tests the primary path resolution logic for multi-plugin scenarios.
      *
      * @since 1.3.1
+     * @return void
      */
     public function testAssetUrlResolutionWithStandardVendorStructure(): void
     {
@@ -164,6 +187,7 @@ class UpdaterEnqueueScriptTest extends TestCase
      * to __DIR__-based resolution for development or non-Composer installations.
      *
      * @since 1.3.1
+     * @return void
      */
     public function testAssetUrlResolutionFallbackForNonStandardInstallation(): void
     {
@@ -215,6 +239,7 @@ class UpdaterEnqueueScriptTest extends TestCase
      * the first loaded instance's directory.
      *
      * @since 1.3.1
+     * @return void
      */
     public function testAssetUrlResolutionWithMultiplePlugins(): void
     {
@@ -291,7 +316,7 @@ class UpdaterEnqueueScriptTest extends TestCase
     /**
      * Get the src URL of an enqueued script, compatible with both mock and real WordPress
      *
-     * @param string $handle Script handle
+     * @param string $handle Script handle.
      * @return string|null The script source URL, or null if not found
      */
     private function getEnqueuedScriptSrc(string $handle): ?string
@@ -332,7 +357,7 @@ class UpdaterEnqueueScriptTest extends TestCase
     /**
      * Recursively remove a directory and its contents
      *
-     * @param string $dir Directory path to remove
+     * @param string $dir Directory path to remove.
      * @return void
      */
     private function recursiveRemoveDirectory(string $dir): void

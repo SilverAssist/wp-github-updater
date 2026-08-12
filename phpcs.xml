@@ -2,21 +2,19 @@
 <phpcs>
     <!--
         WP GitHub Updater - PHP Coding Standards Configuration
-        
-        This configuration enforces the coding standards defined in our 
-        project instructions, specifically:
-        
-        🚨 MANDATORY STANDARDS:
-        - ALL strings MUST use double quotes: "string" not 'string'
+
+        Uses the shared SilverAssist ruleset (PSR-12 + mandatory PHPDoc)
+        from silverassist/coding-standards. This is a library, not a
+        WordPress plugin (no main plugin file, no plugins_loaded hook,
+        no WordPress dependency in composer.json's require), so PSR-12
+        applies instead of WordPress-Extra. A handful of WordPress-aware
+        sniffs are still layered on top since this package does call
+        WordPress functions:
+
         - WordPress security best practices (escaping, sanitization)
         - Text domain validation for i18n functions
-        - PSR-12 compliance for modern PHP 8+ conventions
-        - Proper documentation standards for public APIs
-        
-        Package-specific allowances:
-        - PSR-4 naming conventions (not WordPress file naming)
-        - Namespace usage instead of global prefixes
-        - String interpolation with variables in double quotes
+        - Double-quote string enforcement (this package's own convention,
+          predates the shared ruleset)
         - Reasonable line length limits (120/160 characters)
     -->
     <arg name="basepath" value="."/>
@@ -33,8 +31,7 @@
     <file>src</file>
     <file>tests</file>
 
-    <!-- Base PSR12 standard -->
-    <rule ref="PSR12"/>
+    <rule ref="SilverAssist"/>
 
     <!-- 🚨 CRITICAL RULE: Enforce double quotes for strings -->
     <!-- This is our MANDATORY string quotation standard -->

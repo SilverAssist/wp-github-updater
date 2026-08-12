@@ -144,9 +144,9 @@ class UpdaterConfig
      * Initializes the updater configuration with plugin metadata and settings.
      * Accepts text domain from the consuming plugin for proper i18n support.
      *
-     * @param string $pluginFile Main plugin file path
-     * @param string $githubRepo GitHub repository (owner/repo)
-     * @param array  $options    Additional configuration options including text_domain
+     * @param string $pluginFile Main plugin file path.
+     * @param string $githubRepo GitHub repository (owner/repo).
+     * @param array  $options    Additional configuration options including text_domain.
      *
      * @since 1.0.0
      */
@@ -179,7 +179,7 @@ class UpdaterConfig
      * Retrieves plugin metadata from the plugin file header.
      * Falls back to empty array when WordPress functions aren't available.
      *
-     * @param string $pluginFile Path to the plugin file
+     * @param string $pluginFile Path to the plugin file.
      * @return array Plugin data array
      *
      * @since 1.0.0
@@ -197,7 +197,7 @@ class UpdaterConfig
     /**
      * Translation wrapper for the package
      *
-     * @param string $text Text to translate
+     * @param string $text Text to translate.
      * @return string Translated text
      *
      * @since 1.1.0
@@ -210,7 +210,7 @@ class UpdaterConfig
     /**
      * Escaped translation wrapper for the package
      *
-     * @param string $text Text to translate and escape
+     * @param string $text Text to translate and escape.
      * @return string Translated and escaped text
      *
      * @since 1.1.0

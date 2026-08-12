@@ -26,6 +26,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Set up test environment before each test
+     * @return void
      */
     protected function setUp(): void
     {
@@ -42,6 +43,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Clean up after each test
+     * @return void
      */
     protected function tearDown(): void
     {
@@ -54,6 +56,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test that temporary directory configuration is respected
+     * @return void
      */
     public function testCustomTempDirectoryIsRespected(): void
     {
@@ -68,6 +71,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test that package URL validation works correctly
+     * @return void
      */
     public function testPackageUrlValidation(): void
     {
@@ -83,6 +87,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test file size validation logic
+     * @return void
      */
     public function testFileSizeValidation(): void
     {
@@ -97,6 +102,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test that hook_extra validation logic works
+     * @return void
      */
     public function testHookExtraValidation(): void
     {
@@ -119,6 +125,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test version comparison logic
+     * @return void
      */
     public function testVersionComparison(): void
     {
@@ -133,6 +140,7 @@ class DownloadFilterTest extends TestCase
 
     /**
      * Test GitHub repository format validation
+     * @return void
      */
     public function testGitHubRepoFormat(): void
     {

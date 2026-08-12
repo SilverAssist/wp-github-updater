@@ -34,6 +34,7 @@ use SilverAssist\WpGithubUpdater\Updater;
  *
  * This function demonstrates the recommended integration pattern
  * for the WP GitHub Updater package.
+ * @return void
  */
 function mock_plugin_init_updater(): void
 {
@@ -82,6 +83,7 @@ add_action("plugins_loaded", "mock_plugin_init_updater");
 
 /**
  * Add admin menu for testing
+ * @return void
  */
 function mock_plugin_admin_menu(): void
 {
@@ -99,6 +101,7 @@ add_action("admin_menu", "mock_plugin_admin_menu");
 
 /**
  * Admin page for testing
+ * @return void
  */
 function mock_plugin_admin_page(): void
 {
@@ -184,6 +187,7 @@ function mock_plugin_admin_page(): void
 
 /**
  * Activation hook
+ * @return void
  */
 function mock_plugin_activate(): void
 {
@@ -194,6 +198,7 @@ register_activation_hook(__FILE__, "mock_plugin_activate");
 
 /**
  * Deactivation hook
+ * @return void
  */
 function mock_plugin_deactivate(): void
 {
