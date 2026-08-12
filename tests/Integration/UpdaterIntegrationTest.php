@@ -25,6 +25,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Set up test environment before each test
+     * @return void
      */
     protected function setUp(): void
     {
@@ -44,6 +45,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Clean up after each test
+     * @return void
      */
     protected function tearDown(): void
     {
@@ -56,6 +58,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test that Updater can be instantiated with valid configuration
+     * @return void
      */
     public function testUpdaterInstantiation(): void
     {
@@ -68,6 +71,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test configuration validation
+     * @return void
      */
     public function testConfigurationValidation(): void
     {
@@ -79,6 +83,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test custom temporary directory configuration
+     * @return void
      */
     public function testCustomTempDirConfiguration(): void
     {
@@ -93,6 +98,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test text domain configuration
+     * @return void
      */
     public function testTextDomainConfiguration(): void
     {
@@ -105,6 +111,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test AJAX configuration
+     * @return void
      */
     public function testAjaxConfiguration(): void
     {
@@ -116,6 +123,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test asset pattern configuration
+     * @return void
      */
     public function testAssetPatternConfiguration(): void
     {
@@ -128,6 +136,7 @@ class UpdaterIntegrationTest extends TestCase
 
     /**
      * Test WordPress requirements configuration
+     * @return void
      */
     public function testWordPressRequirementsConfiguration(): void
     {

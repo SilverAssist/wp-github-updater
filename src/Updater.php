@@ -81,7 +81,7 @@ class Updater
      *
      * Sets up plugin identification, version information and WordPress hooks.
      *
-     * @param UpdaterConfig $config Updater configuration object
+     * @param UpdaterConfig $config Updater configuration object.
      *
      * @since 1.0.0
      */
@@ -106,6 +106,7 @@ class Updater
      *
      *
      * @since 1.0.0
+     * @return void
      */
     private function initHooks(): void
     {
@@ -132,12 +133,12 @@ class Updater
      * Compares the current plugin version with the latest GitHub release
      * and adds update information to the WordPress update transient if needed.
      *
-     * @param mixed $transient The update_plugins transient containing current plugin versions
+     * @param mixed $transient The update_plugins transient containing current plugin versions.
      * @return mixed The modified transient with update information added if available
      *
      * @since 1.0.0
      */
-    public function checkForUpdate($transient)
+    public function checkForUpdate(mixed $transient)
     {
         if (empty($transient->checked)) {
             return $transient;
@@ -167,9 +168,9 @@ class Updater
      * Provides detailed plugin information when WordPress requests it,
      * including version, changelog, and download information.
      *
-     * @param false|object|array $result The result object or array
-     * @param string             $action The type of information being requested
-     * @param object             $args   Plugin API arguments
+     * @param false|object|array $result The result object or array.
+     * @param string             $action The type of information being requested.
+     * @param object             $args   Plugin API arguments.
      * @return false|object|array Plugin information object or original result
      *
      * @since 1.0.0
@@ -249,9 +250,10 @@ class Updater
     /**
      * Get download URL for a specific version
      *
-     * @param string $version The version to download
+     * @param string $version The version to download.
      *
      * @since 1.0.0
+     * @return string
      */
     private function getDownloadUrl(string $version): string
     {
@@ -275,7 +277,7 @@ class Updater
     /**
      * Get actual asset download URL from GitHub API
      *
-     * @param string $version The version to get asset URL for
+     * @param string $version The version to get asset URL for.
      * @return string|null Asset download URL or null if not found
      *
      * @since 1.1.0
@@ -393,8 +395,9 @@ class Updater
     /**
      * Clear version cache after update
      *
-     * @param WP_Upgrader $upgrader WP_Upgrader instance
-     * @param array        $data     Array of update data
+     * @param WP_Upgrader $upgrader WP_Upgrader instance.
+     * @param array       $data     Array of update data.
+     * @return void
      */
     public function clearVersionCache(WP_Upgrader $upgrader, array $data): void
     {
@@ -407,6 +410,7 @@ class Updater
 
     /**
      * Manual version check via AJAX
+     * @return void
      */
     public function manualVersionCheck(): void
     {
@@ -494,6 +498,7 @@ class Updater
      * after a manual version check.
      *
      * @since 1.1.4
+     * @return void
      */
     public function showUpdateNotice(): void
     {
@@ -556,6 +561,7 @@ class Updater
 
     /**
      * Get plugin data from file
+     * @return array
      */
     private function getPluginData(): array
     {
@@ -569,6 +575,7 @@ class Updater
     /**
      * Get current version
      *
+     * @return string
      */
     public function getCurrentVersion(): string
     {
@@ -578,6 +585,7 @@ class Updater
     /**
      * Get GitHub repository
      *
+     * @return string
      */
     public function getGithubRepo(): string
     {
@@ -587,6 +595,7 @@ class Updater
     /**
      * Check if update is available
      *
+     * @return boolean
      */
     public function isUpdateAvailable(): bool
     {
@@ -602,7 +611,7 @@ class Updater
      * the need for consuming plugins to maintain their own JavaScript files.
      * The script is loaded once and works for multiple plugins on the same page.
      *
-     * @param array<string, string> $extraStrings  Optional extra i18n string overrides
+     * @param array<string, string> $extraStrings Optional extra i18n string overrides.
      * @return string Inline JS to echo (e.g. "wpGithubUpdaterCheckUpdates('myData'); return false;")
      *
      * @since 1.3.0
@@ -653,7 +662,7 @@ class Updater
      * PHP's autoloader loads the class from the first registered vendor directory, but
      * each plugin instance needs to load assets from its own vendor directory.
      *
-     * @param string $assetPath Relative path to asset (e.g., 'assets/js/check-updates.js')
+     * @param string $assetPath Relative path to asset (e.g., 'assets/js/check-updates.js').
      * @return string Full URL to the asset file
      *
      * @since 1.3.0
@@ -695,7 +704,7 @@ class Updater
      * Removes or replaces characters that are not valid in JavaScript identifiers.
      * Used to generate unique global variable names for wp_localize_script.
      *
-     * @param string $name Raw name to sanitize
+     * @param string $name Raw name to sanitize.
      * @return string Valid JavaScript variable name
      *
      * @since 1.3.0
@@ -720,7 +729,7 @@ class Updater
      * Converts basic Markdown syntax to HTML for better changelog display.
      * Supports headers, bold text, italic text, inline code, lists, and links.
      *
-     * @param string $markdown Markdown content to convert
+     * @param string $markdown Markdown content to convert.
      * @return string HTML formatted content
      *
      * @since 1.0.1
@@ -778,10 +787,10 @@ class Updater
      * - string: Path to an already-downloaded file for WordPress to use
      * - NEVER return true or any other type!
      *
-     * @param boolean|WP_Error $result   The result from previous filters
-     * @param string            $package  The package URL being downloaded
-     * @param object            $upgrader The WP_Upgrader instance
-     * @param array             $hook_extra Extra hook data
+     * @param boolean|WP_Error $result     The result from previous filters.
+     * @param string           $package    The package URL being downloaded.
+     * @param object           $upgrader   The WP_Upgrader instance.
+     * @param array            $hook_extra Extra hook data.
      * @return string|WP_Error|false Path to downloaded file, WP_Error on failure, or false to continue
      *
      * @since 1.1.0
@@ -935,7 +944,7 @@ class Updater
      * Attempts different approaches to create a temporary file to avoid PCLZIP errors
      * that can occur with restrictive /tmp directory permissions.
      *
-     * @param string $package The package URL being downloaded
+     * @param string $package The package URL being downloaded.
      * @return string|WP_Error Path to temporary file or WP_Error on failure
      *
      * @since 1.1.4

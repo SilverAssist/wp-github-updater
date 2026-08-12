@@ -25,6 +25,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Set up test environment before each test
+     * @return void
      */
     protected function setUp(): void
     {
@@ -46,6 +47,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Clean up after each test
+     * @return void
      */
     protected function tearDown(): void
     {
@@ -58,6 +60,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test configuration object creation
+     * @return void
      */
     public function testConfigurationCreation(): void
     {
@@ -68,6 +71,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test plugin homepage configuration
+     * @return void
      */
     public function testPluginHomepage(): void
     {
@@ -77,6 +81,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test plugin author configuration
+     * @return void
      */
     public function testPluginAuthor(): void
     {
@@ -93,6 +98,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test cache duration configuration
+     * @return void
      */
     public function testCacheDuration(): void
     {
@@ -106,6 +112,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test transient naming convention
+     * @return void
      */
     public function testTransientNaming(): void
     {
@@ -119,6 +126,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test AJAX action naming convention
+     * @return void
      */
     public function testAjaxActionNaming(): void
     {
@@ -132,6 +140,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test nonce naming convention
+     * @return void
      */
     public function testNonceNaming(): void
     {
@@ -145,6 +154,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test plugin data structure
+     * @return void
      */
     public function testPluginDataStructure(): void
     {
@@ -156,6 +166,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test WordPress version requirements
+     * @return void
      */
     public function testWordPressVersionRequirements(): void
     {
@@ -166,6 +177,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test PHP version requirements
+     * @return void
      */
     public function testPHPVersionRequirements(): void
     {
@@ -176,6 +188,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test asset pattern replacement tokens
+     * @return void
      */
     public function testAssetPatternTokens(): void
     {
@@ -189,6 +202,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test translation function wrapper
+     * @return void
      */
     public function testTranslationFunctionWrapper(): void
     {
@@ -201,6 +215,7 @@ class WordPressHooksTest extends TestCase
 
     /**
      * Test GitHub API URL construction
+     * @return void
      */
     public function testGitHubApiUrlConstruction(): void
     {

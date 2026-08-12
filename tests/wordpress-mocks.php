@@ -14,8 +14,8 @@ if (!function_exists("__")) {
     /**
      * Mock __ function for tests
      *
-     * @param string $text   Text to translate
-     * @param string $domain Text domain
+     * @param string $text   Text to translate.
+     * @param string $domain Text domain.
      * @return string Translated text (returns original in tests)
      */
     function __(string $text, string $domain = "default"): string
@@ -28,8 +28,8 @@ if (!function_exists("esc_html__")) {
     /**
      * Mock esc_html__ function for tests
      *
-     * @param string $text   Text to translate
-     * @param string $domain Text domain
+     * @param string $text   Text to translate.
+     * @param string $domain Text domain.
      * @return string Escaped and translated text
      */
     function esc_html__(string $text, string $domain = "default"): string
@@ -43,11 +43,11 @@ if (!function_exists("add_filter")) {
     /**
      * Mock add_filter function for tests
      *
-     * @param string   $hook_name Hook name
-     * @param callable $callback  Callback function
-     * @param int      $priority  Priority
-     * @param int      $accepted_args Accepted arguments
-     * @return bool Always returns true
+     * @param string   $hook_name     Hook name.
+     * @param callable $callback      Callback function.
+     * @param integer  $priority      Priority.
+     * @param integer  $accepted_args Accepted arguments.
+     * @return boolean Always returns true
      */
     function add_filter(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
     {
@@ -59,11 +59,11 @@ if (!function_exists("add_action")) {
     /**
      * Mock add_action function for tests
      *
-     * @param string   $hook_name Hook name
-     * @param callable $callback  Callback function
-     * @param int      $priority  Priority
-     * @param int      $accepted_args Accepted arguments
-     * @return bool Always returns true
+     * @param string   $hook_name     Hook name.
+     * @param callable $callback      Callback function.
+     * @param integer  $priority      Priority.
+     * @param integer  $accepted_args Accepted arguments.
+     * @return boolean Always returns true
      */
     function add_action(string $hook_name, callable $callback, int $priority = 10, int $accepted_args = 1): bool
     {
@@ -76,7 +76,7 @@ if (!function_exists("plugin_basename")) {
     /**
      * Mock plugin_basename function for tests
      *
-     * @param string $file Plugin file path
+     * @param string $file Plugin file path.
      * @return string Plugin basename
      */
     function plugin_basename(string $file): string
@@ -108,9 +108,9 @@ if (!function_exists("get_plugin_data")) {
     /**
      * Mock get_plugin_data function for tests
      *
-     * @param string $plugin_file Path to the plugin file
-     * @param bool   $markup      Whether to apply markup
-     * @param bool   $translate   Whether to translate
+     * @param string  $plugin_file Path to the plugin file.
+     * @param boolean $markup      Whether to apply markup.
+     * @param boolean $translate   Whether to translate.
      * @return array Plugin data array
      */
     function get_plugin_data(string $plugin_file, bool $markup = true, bool $translate = true): array
@@ -167,8 +167,8 @@ if (!function_exists("admin_url")) {
     /**
      * Mock admin_url function for tests
      *
-     * @param string $path   Path relative to admin URL
-     * @param string $scheme URL scheme
+     * @param string $path   Path relative to admin URL.
+     * @param string $scheme URL scheme.
      * @return string Admin URL
      */
     function admin_url(string $path = "", string $scheme = "admin"): string
@@ -181,8 +181,8 @@ if (!function_exists("site_url")) {
     /**
      * Mock site_url function for tests
      *
-     * @param string      $path   Path relative to site URL
-     * @param string|null $scheme URL scheme
+     * @param string      $path   Path relative to site URL.
+     * @param string|null $scheme URL scheme.
      * @return string Site URL
      */
     function site_url(string $path = "", ?string $scheme = null): string
@@ -195,7 +195,7 @@ if (!function_exists("wp_normalize_path")) {
     /**
      * Mock wp_normalize_path function for tests
      *
-     * @param string $path Path to normalize
+     * @param string $path Path to normalize.
      * @return string Normalized path
      */
     function wp_normalize_path(string $path): string
@@ -214,11 +214,11 @@ if (!function_exists("wp_enqueue_script")) {
     /**
      * Mock wp_enqueue_script function for tests
      *
-     * @param string           $handle    Script handle
-     * @param string           $src       Script source URL
-     * @param array            $deps      Dependencies
-     * @param string|bool|null $ver       Version
-     * @param bool             $in_footer Load in footer
+     * @param string              $handle    Script handle.
+     * @param string              $src       Script source URL.
+     * @param array               $deps      Dependencies.
+     * @param string|boolean|null $ver       Version.
+     * @param boolean             $in_footer Load in footer.
      * @return void
      */
     function wp_enqueue_script(
@@ -246,10 +246,10 @@ if (!function_exists("wp_localize_script")) {
     /**
      * Mock wp_localize_script function for tests
      *
-     * @param string $handle      Script handle
-     * @param string $object_name JavaScript object name
-     * @param array  $l10n        Localization data
-     * @return bool Always returns true
+     * @param string $handle      Script handle.
+     * @param string $object_name JavaScript object name.
+     * @param array  $l10n        Localization data.
+     * @return boolean Always returns true
      */
     function wp_localize_script(string $handle, string $object_name, array $l10n): bool
     {
@@ -267,7 +267,7 @@ if (!function_exists("wp_create_nonce")) {
     /**
      * Mock wp_create_nonce function for tests
      *
-     * @param string|int $action Action name
+     * @param string|integer $action Action name.
      * @return string Nonce token
      */
     function wp_create_nonce($action = -1): string
@@ -280,7 +280,7 @@ if (!function_exists("plugin_dir_url")) {
     /**
      * Mock plugin_dir_url function for tests
      *
-     * @param string $file Plugin file path
+     * @param string $file Plugin file path.
      * @return string Plugin directory URL with trailing slash
      */
     function plugin_dir_url(string $file): string
@@ -318,11 +318,11 @@ if (!class_exists("WP_Error")) {
         /**
          * Constructor
          *
-         * @param string $code    Error code
-         * @param string $message Error message
-         * @param mixed  $data    Error data
+         * @param string $code    Error code.
+         * @param string $message Error message.
+         * @param mixed  $data    Error data.
          */
-        public function __construct(string $code = "", string $message = "", $data = "")
+        public function __construct(string $code = "", string $message = "", mixed $data = "")
         {
             if (!empty($code)) {
                 $this->errors[$code][] = $message;
@@ -335,7 +335,7 @@ if (!class_exists("WP_Error")) {
         /**
          * Get error message
          *
-         * @param string $code Error code
+         * @param string $code Error code.
          * @return string Error message
          */
         public function get_error_message(string $code = ""): string
@@ -362,10 +362,10 @@ if (!function_exists("is_wp_error")) {
     /**
      * Mock is_wp_error function for tests
      *
-     * @param mixed $thing Value to check
-     * @return bool True if WP_Error instance
+     * @param mixed $thing Value to check.
+     * @return boolean True if WP_Error instance
      */
-    function is_wp_error($thing): bool
+    function is_wp_error(mixed $thing): bool
     {
         return $thing instanceof WP_Error;
     }
@@ -382,7 +382,7 @@ if (!function_exists("get_transient")) {
      *
      * Uses in-memory storage to simulate WordPress transient behaviour.
      *
-     * @param string $transient Transient name
+     * @param string $transient Transient name.
      * @return mixed Transient value or false if not set/expired
      */
     function get_transient(string $transient)
@@ -404,12 +404,12 @@ if (!function_exists("set_transient")) {
     /**
      * Mock set_transient function for tests
      *
-     * @param string $transient  Transient name
-     * @param mixed  $value      Transient value
-     * @param int    $expiration Expiration in seconds (0 = no expiration)
-     * @return bool Always returns true
+     * @param string  $transient  Transient name.
+     * @param mixed   $value      Transient value.
+     * @param integer $expiration Expiration in seconds (0 = no expiration).
+     * @return boolean Always returns true
      */
-    function set_transient(string $transient, $value, int $expiration = 0): bool
+    function set_transient(string $transient, mixed $value, int $expiration = 0): bool
     {
         global $wp_mock_transients;
         $wp_mock_transients[$transient] = [
@@ -424,8 +424,8 @@ if (!function_exists("delete_transient")) {
     /**
      * Mock delete_transient function for tests
      *
-     * @param string $transient Transient name
-     * @return bool Always returns true
+     * @param string $transient Transient name.
+     * @return boolean Always returns true
      */
     function delete_transient(string $transient): bool
     {
@@ -443,8 +443,8 @@ if (!function_exists("wp_remote_get")) {
      * Uses PHP file_get_contents with stream context to make real HTTP
      * requests, mimicking WordPress wp_remote_get() response format.
      *
-     * @param string               $url  URL to fetch
-     * @param array<string, mixed> $args Request arguments
+     * @param string               $url  URL to fetch.
+     * @param array<string, mixed> $args Request arguments.
      * @return array<string, mixed>|WP_Error Response array or WP_Error on failure
      */
     function wp_remote_get(string $url, array $args = [])
@@ -520,8 +520,8 @@ if (!function_exists("wp_remote_retrieve_response_code")) {
     /**
      * Mock wp_remote_retrieve_response_code function for tests
      *
-     * @param array<string, mixed>|WP_Error $response HTTP response array
-     * @return int|string Response code or empty string on failure
+     * @param array<string, mixed>|WP_Error $response HTTP response array.
+     * @return integer|string Response code or empty string on failure
      */
     function wp_remote_retrieve_response_code($response)
     {
@@ -536,7 +536,7 @@ if (!function_exists("wp_remote_retrieve_body")) {
     /**
      * Mock wp_remote_retrieve_body function for tests
      *
-     * @param array<string, mixed>|WP_Error $response HTTP response array
+     * @param array<string, mixed>|WP_Error $response HTTP response array.
      * @return string Response body or empty string on failure
      */
     function wp_remote_retrieve_body($response): string
@@ -552,7 +552,7 @@ if (!function_exists("wp_remote_retrieve_headers")) {
     /**
      * Mock wp_remote_retrieve_headers function for tests
      *
-     * @param array<string, mixed>|WP_Error $response HTTP response array
+     * @param array<string, mixed>|WP_Error $response HTTP response array.
      * @return array<string, string> Response headers or empty array on failure
      */
     function wp_remote_retrieve_headers($response): array

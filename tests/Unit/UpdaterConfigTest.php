@@ -9,11 +9,21 @@ class UpdaterConfigTest extends TestCase
 {
     private static string $testPluginFile;
 
+    /**
+     * Resolve the shared test plugin fixture path once for the whole class.
+     *
+     * @return void
+     */
     public static function setUpBeforeClass(): void
     {
         self::$testPluginFile = dirname(__DIR__) . "/fixtures/test-plugin.php";
     }
 
+    /**
+     * Test that UpdaterConfig applies its documented defaults.
+     *
+     * @return void
+     */
     public function testBasicConfiguration(): void
     {
         $config = new UpdaterConfig(self::$testPluginFile, "owner/repo");
@@ -26,6 +36,11 @@ class UpdaterConfigTest extends TestCase
         $this->assertEquals("wp-github-updater", $config->textDomain);
     }
 
+    /**
+     * Test that UpdaterConfig applies caller-supplied option overrides.
+     *
+     * @return void
+     */
     public function testCustomConfiguration(): void
     {
         $options = [
@@ -55,6 +70,12 @@ class UpdaterConfigTest extends TestCase
         $this->assertEquals("my-custom-plugin", $config->textDomain);
     }
 
+    /**
+     * Test that UpdaterConfig's translation helper methods exist and
+     * return strings.
+     *
+     * @return void
+     */
     public function testTranslationMethods(): void
     {
         $config = new UpdaterConfig(self::$testPluginFile, "owner/repo", [

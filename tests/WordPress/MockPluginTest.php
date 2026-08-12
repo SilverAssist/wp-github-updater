@@ -35,6 +35,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Set up test environment
+     * @return void
      */
     public function setUp(): void
     {
@@ -57,6 +58,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test that mock plugin file exists
+     * @return void
      */
     public function testMockPluginFileExists(): void
     {
@@ -65,6 +67,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test that mock plugin can be loaded
+     * @return void
      */
     public function testMockPluginCanBeLoaded(): void
     {
@@ -80,6 +83,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test that updater is initialized
+     * @return void
      */
     public function testUpdaterIsInitialized(): void
     {
@@ -89,6 +93,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test updater configuration
+     * @return void
      */
     public function testUpdaterConfiguration(): void
     {
@@ -102,6 +107,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test WordPress hooks are registered
+     * @return void
      */
     public function testWordPressHooksAreRegistered(): void
     {
@@ -120,6 +126,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test AJAX actions are registered
+     * @return void
      */
     public function testAjaxActionsAreRegistered(): void
     {
@@ -138,6 +145,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test plugin activation
+     * @return void
      */
     public function testPluginActivation(): void
     {
@@ -155,6 +163,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test plugin deactivation
+     * @return void
      */
     public function testPluginDeactivation(): void
     {
@@ -170,6 +179,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test admin menu is registered
+     * @return void
      */
     public function testAdminMenuIsRegistered(): void
     {
@@ -187,6 +197,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test update check with transient caching
+     * @return void
      */
     public function testUpdateCheckWithCaching(): void
     {
@@ -208,6 +219,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test plugin data retrieval
+     * @return void
      */
     public function testPluginDataRetrieval(): void
     {
@@ -223,6 +235,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test plugin basename generation
+     * @return void
      */
     public function testPluginBasename(): void
     {
@@ -234,6 +247,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Test custom temporary directory configuration
+     * @return void
      */
     public function testCustomTempDirectoryConfiguration(): void
     {
@@ -247,6 +261,7 @@ class MockPluginTest extends WP_UnitTestCase
 
     /**
      * Clean up after tests
+     * @return void
      */
     public function tearDown(): void
     {
