@@ -1,0 +1,64 @@
+#!/bin/sh
+#
+# Commit-msg hook: strip AI attribution trailers
+#
+# Assistants routinely append `Co-Authored-By: Claude ...` or a "Generated with"
+# footer. Commits here are authored solely by the human, so these are removed
+# automatically rather than blocking the commit — a hard failure just gets
+# retried with the same trailer regenerated.
+#
+# Only attribution *trailers* match. Ordinary references such as
+# "docs: update CLAUDE.md" or "chore: bump agents-toolkit" are left alone.
+#
+# Installed via `composer install` (see composer.json's post-install-cmd /
+# post-update-cmd, which run `git config core.hooksPath .githooks`).
+#
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+msg_file="$1"
+[ -f "$msg_file" ] || exit 0
+
+# Lowercased ERE. Matches trailer/footer forms, not bare brand mentions.
+# The "generated with" arm is deliberately unanchored: the emoji some tools
+# prefix is multi-byte and does not match reliably under BSD awk. Bracket
+# classes are written `[[]` rather than `\[` because awk resolves string
+# escapes in -v before the regex engine ever sees them.
+pattern='(^[[:space:]]*co-authored-by:[[:space:]]*.*(claude|anthropic|copilot|chatgpt|openai|gemini))|(generated with[[:space:]]+[[]?(claude|anthropic))|(noreply@anthropic[.]com)|(^[[:space:]]*co-authored-by:[[:space:]]*ai\>)'
+
+# `git commit -v` appends the full diff as comment lines; never inspect those,
+# or a diff touching CLAUDE.md would trip the check.
+offending=$(awk -v pat="$pattern" '
+  /^#/ { next }
+  { if (tolower($0) ~ pat) print }
+' "$msg_file")
+
+[ -z "$offending" ] && exit 0
+
+tmp_file="$msg_file.tmp.$$"
+
+awk -v pat="$pattern" '
+  /^#/ { print; next }
+  { if (tolower($0) ~ pat) next; print }
+' "$msg_file" >"$tmp_file" || { rm -f "$tmp_file"; exit 1; }
+
+# Collapse blank lines left where the trailer block used to be, keeping the
+# comment block (and the subject/body separator) intact.
+awk '
+  /^#/ { for (i = 0; i < pending; i++) print ""; pending = 0; print; next }
+  /^[[:space:]]*$/ { pending++; next }
+  { for (i = 0; i < pending; i++) print ""; pending = 0; print }
+' "$tmp_file" >"$msg_file" && rm -f "$tmp_file"
+
+echo ""
+echo "${YELLOW}🧹 Removed AI attribution from the commit message:${NC}"
+echo "$offending" | while IFS= read -r line; do
+  echo "   ${RED}- ${line}${NC}"
+done
+echo "${CYAN}   (see .githooks/commit-msg)${NC}"
+echo ""
+
+exit 0
