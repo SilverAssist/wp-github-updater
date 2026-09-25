@@ -27,6 +27,49 @@ Install via Composer in your WordPress plugin:
 composer require silverassist/wp-github-updater
 ```
 
+## Installing via Composer (private repository)
+
+SilverAssist packages are installed from their GitHub repositories with a Composer
+`vcs` repository, not from Packagist.org. Those repositories can require
+authentication, so always configure a token.
+
+1. **Declare the repository** in your project's root `composer.json`. Composer only
+   reads `repositories` from the root package, so every SilverAssist package your
+   project needs must be listed there, including transitive ones:
+
+   ```json
+   {
+     "repositories": [
+       { "type": "vcs", "url": "https://github.com/SilverAssist/wp-github-updater" }
+     ],
+     "require": {
+       "silverassist/wp-github-updater": "^1.3"
+     }
+   }
+   ```
+
+2. **Authenticate** with a GitHub token that can read the repository:
+   - Locally: `composer config --global github-oauth.github.com <token>`
+   - CI: set `COMPOSER_AUTH='{"github-oauth":{"github.com":"<token>"}}'` from a secret
+     (a GitHub Actions secret or a Bitbucket variable).
+
+   Never commit a token or an `auth.json`. Without a token, Composer hits GitHub's
+   anonymous API limit (60 requests per hour per IP) and falls back to an SSH clone.
+
+3. **Refresh the lock file** if your project commits `composer.lock`: run
+   `composer update --lock` after adding `repositories`, so the lock file's
+   `content-hash` matches `composer.json`.
+
+This repository's own `composer.json` declares `vcs` repositories for its SilverAssist development dependencies (`coding-standards`), so contributors and CI need the same token.
+
+### Troubleshooting
+
+| Symptom | Cause |
+|---------|-------|
+| `Failed to clone the git@github.com:SilverAssist/wp-github-updater.git repository, try running in interactive mode...` followed by `Permission denied (publickey)` | The token is missing or has no access to the repository. |
+| `remote: Invalid username or token` | The token is invalid or expired. |
+| `it could not be found in any version` | The `vcs` entry is missing from the root `composer.json`. |
+
 ## Quick Start
 
 ### Basic Usage

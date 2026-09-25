@@ -33,7 +33,7 @@ This is a **reusable Composer package** that provides WordPress plugin update fu
 - **WordPress 6.0+**: WordPress update system integration via hooks and filters
 - **PSR-4 Autoloading**: Namespace-based class loading for better organization
 - **GitHub API v3**: REST API integration for release management
-- **Composer Package**: Distributed via Packagist as `silverassist/wp-github-updater`
+- **Composer Package**: Installed from GitHub through a Composer `vcs` repository (with a GitHub token) as `silverassist/wp-github-updater`, not from Packagist.org
 
 ## 🔒 PHPUnit Version Policy - CRITICAL
 
@@ -210,7 +210,7 @@ define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
 - **Version Bumping**: Update version in composer.json and CHANGELOG.md
 - **Git Tagging**: Create semantic version tags (v1.0.0, v1.1.0, etc.)
 - **Documentation**: Update README and integration examples
-- **Packagist**: Automatic distribution via Packagist on tag push
+- **Composer**: Consumers resolve the new tag directly from GitHub through a `vcs` repository; no Packagist step
 
 ### Core Structure
 

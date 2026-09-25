@@ -18,6 +18,9 @@
       "homepage": "https://silverassist.com"
     }
   ],
+  "repositories": [
+    { "type": "vcs", "url": "https://github.com/SilverAssist/coding-standards" }
+  ],
   "require": {
     "php": ">=8.2"
   },

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.2] - 2026-09-25
+
+### Changed
+
+- Declared `vcs` repositories for the SilverAssist development dependencies (`coding-standards`), so contributors and CI resolve them from GitHub instead of Packagist.org.
+
+### Documentation
+
+- Documented installing this package through a Composer `vcs` repository with a GitHub token, instead of Packagist.org (README, "Installing via Composer").
+- Release notes and the Copilot instructions no longer point at Packagist as the distribution channel.
+
 ## [1.3.1] - 2026-03-02
 
 ### Fixed

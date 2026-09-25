@@ -171,6 +171,8 @@ jobs:
                   - **WordPress Version**: 6.0+
 
                   ## 🚀 Installation via Composer
+                  Declare the repository as a Composer \`vcs\` repository first (see [README](README.md#installing-via-composer-private-repository)).
+
                   \`\`\`bash
                   composer require silverassist/wp-github-updater:^$VERSION
                   \`\`\`
@@ -246,6 +248,8 @@ jobs:
                   - Composer package definition (\`composer.json\`)
 
                   ## Installation via Composer
+                  Declare the repository as a Composer \`vcs\` repository first (see [README](README.md#installing-via-composer-private-repository)).
+
                   \`\`\`bash
                   composer require silverassist/wp-github-updater:^$VERSION
                   \`\`\`
@@ -291,7 +295,7 @@ jobs:
                   - **Issues**: [GitHub Issues](https://github.com/SilverAssist/wp-github-updater/issues)
 
                   ## Distribution
-                  - **Packagist**: https://packagist.org/packages/silverassist/wp-github-updater
+                  - **Composer**: installed from this repository through a \`vcs\` repository, see [README](README.md#installing-via-composer-private-repository)
                   - **GitHub Releases**: https://github.com/SilverAssist/wp-github-updater/releases
                   EOF
 
