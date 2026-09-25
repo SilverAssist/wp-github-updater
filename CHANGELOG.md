@@ -8,9 +8,11 @@
 - The token is sent as `Authorization: Bearer` to `api.github.com` only. A private asset is downloaded through its API URL in two steps: the first request carries the token and stops at GitHub's redirect, the second goes to the signed storage URL without the token. A redirect that is not https is refused.
 - Failed requests log a distinct message for 401, 403 and 404, with and without a token, naming the constant to check. The token is never logged, and a failed version lookup is not cached.
 - Tests on the real WordPress Test Suite that intercept requests with the `pre_http_request` filter, and an opt-in live test against a private repository (`WPGU_LIVE_REPO`, `WPGU_LIVE_VERSION`, `SILVER_GITHUB_TOKEN`).
+- `ci.yml` runs on every pull request and push to `main`: PHPCS, PHPStan and `composer validate --strict`, the full PHPUnit suite on the real WordPress Test Suite (PHP 8.2, 8.3 and 8.4), and the unit and integration suites without WordPress. Until now the tests only ran when a release tag was pushed.
 
 ### Fixed
 
+- `composer phpstan` crashed on the default 128 MB PHP memory limit. It now runs with `--memory-limit=512M`.
 - 29 PHPStan level 8 errors, and an `ignoreErrors` pattern that no longer matched, so `composer check` passes again.
 - `download_link` in the plugin information is empty, instead of a broken URL, when the version lookup fails.
 - `pluginInfo()` and `checkForUpdate()` no longer raise a warning on a missing `slug` or a transient that is not an object.
@@ -19,6 +21,7 @@
 ### Changed
 
 - Documentation, class descriptions and the package description no longer say "public GitHub releases".
+- `ci.yml` and `create-release.yml` pass the `COMPOSER_AUTH` secret to `composer install`, because the SilverAssist development dependencies are resolved from GitHub.
 
 ### Documentation
 

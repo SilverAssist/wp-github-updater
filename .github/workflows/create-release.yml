@@ -44,6 +44,8 @@ jobs:
                   echo "✅ Subversion installed"
 
             - name: Install Composer dependencies
+              env:
+                  COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
               run: |
                   composer install --optimize-autoloader --no-interaction
                   echo "✅ Composer dependencies installed successfully (including dev dependencies for testing)"

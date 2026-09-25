@@ -55,7 +55,7 @@
     "test:wordpress": "phpunit --testsuite wordpress",
     "phpcs": "phpcs",
     "phpcbf": "phpcbf",
-    "phpstan": "phpstan analyse src/ --level=8",
+    "phpstan": "phpstan analyse src/ --level=8 --memory-limit=512M",
     "check": [
       "@phpcs",
       "@phpstan",
