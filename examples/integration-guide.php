@@ -194,11 +194,29 @@ define('WP_TEMP_DIR', ABSPATH . 'wp-content/temp');
  * Installation steps for existing plugins:
  * 
  * 1. Navigate to your plugin directory
- * 2. Run: composer require silverassist/wp-github-updater
+ * 2. Declare the vcs repository (see the README) and run: composer require silverassist/wp-github-updater
  * 3. Replace your existing updater code with the examples above
  * 4. Remove your old updater class files
  * 5. Test the updates
  */
+
+/**
+ * Private repositories (v1.4.0+):
+ *
+ * To update a plugin from a private GitHub repository, give the site a token that can read it.
+ * The updater reads it from a PHP constant, then from an environment variable, never from the
+ * database. It is sent to api.github.com only.
+ */
+
+/*
+// wp-config.php
+define('SILVER_GITHUB_TOKEN', 'the-token');
+
+// Optional: use another name for the constant or environment variable.
+$config = new UpdaterConfig($pluginFile, 'owner/private-repo', [
+    'token_constant' => 'MY_PLUGIN_GITHUB_TOKEN',
+]);
+*/
 
 /**
  * New Features in v1.3.0:
