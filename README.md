@@ -41,7 +41,7 @@ authentication, so always configure a token.
    ```json
    {
      "repositories": [
-       { "type": "vcs", "url": "https://github.com/SilverAssist/wp-github-updater" }
+       { "type": "vcs", "url": "https://github.com/SilverAssist/wp-github-updater", "no-api": true }
      ],
      "require": {
        "silverassist/wp-github-updater": "^1.3"
@@ -56,6 +56,11 @@ authentication, so always configure a token.
 
    Never commit a token or an `auth.json`. Without a token, Composer hits GitHub's
    anonymous API limit (60 requests per hour per IP) and falls back to an SSH clone.
+
+   Keep `"no-api": true` on every `vcs` entry: it makes Composer read tags with git instead of
+   the GitHub API. Without it, one install without a lock file costs about 100 API requests of
+   the token's hourly quota (5,000, shared with the token owner's other API usage), which a busy
+   CI can exhaust.
 
 3. **Refresh the lock file** if your project commits `composer.lock`: run
    `composer update --lock` after adding `repositories`, so the lock file's

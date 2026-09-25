@@ -19,7 +19,7 @@
     }
   ],
   "repositories": [
-    { "type": "vcs", "url": "https://github.com/SilverAssist/coding-standards" }
+    { "type": "vcs", "url": "https://github.com/SilverAssist/coding-standards", "no-api": true }
   ],
   "require": {
     "php": ">=8.2"
