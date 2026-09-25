@@ -144,9 +144,9 @@ class UpdaterConfig
      * Initializes the updater configuration with plugin metadata and settings.
      * Accepts text domain from the consuming plugin for proper i18n support.
      *
-     * @param string $pluginFile Main plugin file path.
-     * @param string $githubRepo GitHub repository (owner/repo).
-     * @param array  $options    Additional configuration options including text_domain.
+     * @param string               $pluginFile Main plugin file path.
+     * @param string               $githubRepo GitHub repository (owner/repo).
+     * @param array<string, mixed> $options    Additional configuration options including text_domain.
      *
      * @since 1.0.0
      */
@@ -180,7 +180,7 @@ class UpdaterConfig
      * Falls back to empty array when WordPress functions aren't available.
      *
      * @param string $pluginFile Path to the plugin file.
-     * @return array Plugin data array
+     * @return array<string, mixed> Plugin data array
      *
      * @since 1.0.0
      */

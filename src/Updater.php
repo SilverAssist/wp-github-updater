@@ -63,7 +63,7 @@ class Updater
     /**
      * Plugin data from header
      *
-     * @var array Plugin metadata extracted from plugin file header
+     * @var array<string, mixed> Plugin metadata extracted from plugin file header
      * @since 1.0.0
      */
     private array $pluginData;
@@ -140,13 +140,14 @@ class Updater
      */
     public function checkForUpdate(mixed $transient)
     {
-        if (empty($transient->checked)) {
+        if (!is_object($transient) || empty($transient->checked)) {
             return $transient;
         }
 
+        /** @var \stdClass $transient */
         $latestVersion = $this->getLatestVersion();
 
-        if ($this->isUpdateAvailable()) {
+        if ($latestVersion !== false && $this->isUpdateAvailable()) {
             $transient->response[$this->pluginSlug] = (object) [
                 "slug" => $this->pluginBasename,
                 "plugin" => $this->pluginSlug,
@@ -168,16 +169,16 @@ class Updater
      * Provides detailed plugin information when WordPress requests it,
      * including version, changelog, and download information.
      *
-     * @param false|object|array $result The result object or array.
-     * @param string             $action The type of information being requested.
-     * @param object             $args   Plugin API arguments.
-     * @return false|object|array Plugin information object or original result
+     * @param false|object|array<string, mixed> $result The result object or array.
+     * @param string                            $action The type of information being requested.
+     * @param object                            $args   Plugin API arguments.
+     * @return false|object|array<string, mixed> Plugin information object or original result
      *
      * @since 1.0.0
      */
     public function pluginInfo(false|object|array $result, string $action, object $args): false|object|array
     {
-        if ($action !== "plugin_information" || $args->slug !== $this->pluginBasename) {
+        if ($action !== "plugin_information" || !isset($args->slug) || $args->slug !== $this->pluginBasename) {
             return $result;
         }
 
@@ -199,7 +200,7 @@ class Updater
                 "description" => $this->config->pluginDescription,
                 "changelog" => $changelog,
             ],
-            "download_link" => $this->getDownloadUrl($latestVersion),
+            "download_link" => $latestVersion !== false ? $this->getDownloadUrl($latestVersion) : "",
             "last_updated" => $this->getLastUpdated(),
         ];
     }
@@ -395,8 +396,8 @@ class Updater
     /**
      * Clear version cache after update
      *
-     * @param WP_Upgrader $upgrader WP_Upgrader instance.
-     * @param array       $data     Array of update data.
+     * @param WP_Upgrader          $upgrader WP_Upgrader instance.
+     * @param array<string, mixed> $data     Array of update data.
      * @return void
      */
     public function clearVersionCache(WP_Upgrader $upgrader, array $data): void
@@ -561,7 +562,7 @@ class Updater
 
     /**
      * Get plugin data from file
-     * @return array
+     * @return array<string, mixed>
      */
     private function getPluginData(): array
     {
@@ -724,6 +725,39 @@ class Updater
     }
 
     /**
+     * Replace with a regular expression, keeping the input when the pattern fails
+     *
+     * preg_replace() returns null on an engine error (for example a backtrack limit).
+     * Keeping the original text is safer than turning the whole changelog into an empty string.
+     *
+     * @param string $pattern     Regular expression.
+     * @param string $replacement Replacement text.
+     * @param string $subject     Text to search.
+     * @return string The replaced text, or the original subject on failure
+     *
+     * @since 1.4.0
+     */
+    private function regexReplace(string $pattern, string $replacement, string $subject): string
+    {
+        return preg_replace($pattern, $replacement, $subject) ?? $subject;
+    }
+
+    /**
+     * Replace with a regular expression callback, keeping the input when the pattern fails
+     *
+     * @param string                                      $pattern  Regular expression.
+     * @param callable(array<int|string, string>): string $callback Callback that builds each replacement.
+     * @param string                                      $subject  Text to search.
+     * @return string The replaced text, or the original subject on failure
+     *
+     * @since 1.4.0
+     */
+    private function regexReplaceCallback(string $pattern, callable $callback, string $subject): string
+    {
+        return preg_replace_callback($pattern, $callback, $subject) ?? $subject;
+    }
+
+    /**
      * Parse Markdown to HTML
      *
      * Converts basic Markdown syntax to HTML for better changelog display.
@@ -740,37 +774,37 @@ class Updater
         $html = $markdown;
 
         // Headers (# -> h2, ## -> h3, ### -> h4, #### -> h5)
-        $html = preg_replace("/^#### (.*$)/m", "<h5>$1</h5>", $html);
-        $html = preg_replace("/^### (.*$)/m", "<h4>$1</h4>", $html);
-        $html = preg_replace("/^## (.*$)/m", "<h3>$1</h3>", $html);
-        $html = preg_replace("/^# (.*$)/m", "<h2>$1</h2>", $html);
+        $html = $this->regexReplace("/^#### (.*$)/m", "<h5>$1</h5>", $html);
+        $html = $this->regexReplace("/^### (.*$)/m", "<h4>$1</h4>", $html);
+        $html = $this->regexReplace("/^## (.*$)/m", "<h3>$1</h3>", $html);
+        $html = $this->regexReplace("/^# (.*$)/m", "<h2>$1</h2>", $html);
 
         // Bold text (**text** -> <strong>text</strong>)
-        $html = preg_replace("/\*\*(.*?)\*\*/", "<strong>$1</strong>", $html);
+        $html = $this->regexReplace("/\*\*(.*?)\*\*/", "<strong>$1</strong>", $html);
 
         // Italic text (*text* -> <em>text</em>)
-        $html = preg_replace("/(?<!\*)\*([^*]+)\*(?!\*)/", "<em>$1</em>", $html);
+        $html = $this->regexReplace("/(?<!\*)\*([^*]+)\*(?!\*)/", "<em>$1</em>", $html);
 
         // Code blocks (`code` -> <code>code</code>)
-        $html = preg_replace("/`([^`]+)`/", "<code>$1</code>", $html);
+        $html = $this->regexReplace("/`([^`]+)`/", "<code>$1</code>", $html);
 
         // Unordered lists (- item -> <ul><li>item</li></ul>)
-        $html = preg_replace_callback("/(?:^- (.+)(?:\n|$))+/m", function ($matches) {
-            $items = preg_split("/\n- /", trim($matches[0]));
+        $html = $this->regexReplaceCallback("/(?:^- (.+)(?:\n|$))+/m", function ($matches) {
+            $items = preg_split("/\n- /", trim($matches[0])) ?: [trim($matches[0])];
             $items[0] = ltrim($items[0], "- ");
             $liItems = array_map(fn($item) => "<li>" . trim($item) . "</li>", array_filter($items));
             return "<ul>" . implode("", $liItems) . "</ul>";
         }, $html);
 
         // Links ([text](url) -> <a href="url">text</a>)
-        $html = preg_replace("/\[([^\]]+)\]\(([^)]+)\)/", "<a href=\"$2\">$1</a>", $html);
+        $html = $this->regexReplace("/\[([^\]]+)\]\(([^)]+)\)/", "<a href=\"$2\">$1</a>", $html);
 
         // Line breaks (double newline -> <br>)
-        $html = preg_replace("/\n\s*\n/", "<br>", $html);
-        $html = preg_replace("/\n/", "<br>", $html);
+        $html = $this->regexReplace("/\n\s*\n/", "<br>", $html);
+        $html = $this->regexReplace("/\n/", "<br>", $html);
 
         // Clean up extra line breaks and spaces
-        $html = preg_replace("/(<br>\s*){3,}/", "<br>", $html);
+        $html = $this->regexReplace("/(<br>\s*){3,}/", "<br>", $html);
         $html = trim($html);
 
         return $html;
@@ -787,10 +821,10 @@ class Updater
      * - string: Path to an already-downloaded file for WordPress to use
      * - NEVER return true or any other type!
      *
-     * @param boolean|WP_Error $result     The result from previous filters.
-     * @param string           $package    The package URL being downloaded.
-     * @param object           $upgrader   The WP_Upgrader instance.
-     * @param array            $hook_extra Extra hook data.
+     * @param boolean|WP_Error     $result     The result from previous filters.
+     * @param string               $package    The package URL being downloaded.
+     * @param object               $upgrader   The WP_Upgrader instance.
+     * @param array<string, mixed> $hook_extra Extra hook data.
      * @return string|WP_Error|false Path to downloaded file, WP_Error on failure, or false to continue
      *
      * @since 1.1.0
@@ -836,8 +870,6 @@ class Updater
             "timeout" => 300, // 5 minutes for large files
             "headers" => $this->getDownloadHeaders(),
             "sslverify" => true,
-            "stream" => false,
-            "filename" => null,
         ];
 
         $response = \wp_remote_get($package, $args);
@@ -951,7 +983,11 @@ class Updater
      */
     private function createSecureTempFile(string $package): string|WP_Error
     {
-        $filename = basename(parse_url($package, PHP_URL_PATH)) ?: "github-package.zip";
+        $path = parse_url($package, PHP_URL_PATH);
+        $filename = is_string($path) ? basename($path) : "";
+        if ($filename === "") {
+            $filename = "github-package.zip";
+        }
 
         // Strategy 1: Use custom temporary directory if specified
         if (!empty($this->config->customTempDir)) {
