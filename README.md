@@ -4,7 +4,7 @@
 [![Software License](https://img.shields.io/badge/license-PolyForm--Noncommercial--1.0.0-blue.svg?style=flat-square)](LICENSE.md)
 [![Total Downloads](https://img.shields.io/packagist/dt/silverassist/wp-github-updater.svg?style=flat-square)](https://packagist.org/packages/silverassist/wp-github-updater)
 
-A reusable WordPress plugin updater that handles automatic updates from public GitHub releases. Perfect for WordPress plugins distributed outside the official repository.
+A reusable WordPress plugin updater that handles automatic updates from GitHub releases, public or private. Perfect for WordPress plugins distributed outside the official repository.
 
 ## Features
 
@@ -18,6 +18,7 @@ A reusable WordPress plugin updater that handles automatic updates from public G
 - 🗂️ **Enhanced File Handling**: Multi-tier temporary file creation to resolve hosting issues
 - ✅ **Manual Version Checks**: AJAX-powered manual update checking with immediate admin feedback
 - 🎨 **Built-in JavaScript** (v1.3.0+): Complete update check UI with no custom code needed
+- 🔒 **Private repositories** (v1.4.0+): Reads releases from a private GitHub repository with a token
 
 ## Installation
 
@@ -129,13 +130,14 @@ $updater = new Updater($config);
 | `plugin_author` | string | From plugin header | Plugin author name |
 | `plugin_homepage` | string | GitHub repo URL | Plugin homepage URL |
 | `requires_wordpress` | string | `'6.0'` | Minimum WordPress version |
-| `requires_php` | string | `'8.3'` | Minimum PHP version |
+| `requires_php` | string | `'8.2'` | Minimum PHP version |
 | `asset_pattern` | string | `'{slug}-v{version}.zip'` | GitHub release asset filename pattern |
 | `cache_duration` | int | `43200` (12 hours) | Cache duration in seconds |
 | `ajax_action` | string | `'check_plugin_version'` | AJAX action name for manual checks |
 | `ajax_nonce` | string | `'plugin_version_check'` | AJAX nonce name |
 | `text_domain` | string | `'wp-github-updater'` | WordPress text domain for i18n **(New in 1.1.0)** |
 | `custom_temp_dir` | string\|null | `null` | Custom temporary directory path **(New in 1.1.3)** |
+| `token_constant` | string | `'SILVER_GITHUB_TOKEN'` | Name of the PHP constant or environment variable that holds the GitHub token for private repositories **(New in 1.4.0)** |
 
 ### Internationalization Support (i18n)
 
@@ -163,6 +165,68 @@ If your plugin slug is `my-awesome-plugin` and version is `1.2.3`:
 
 - Default pattern: `my-awesome-plugin-v1.2.3.zip`
 - Custom pattern: `my-plugin-1.2.3.zip` (using `{slug}-{version}.zip`)
+
+## Private Repositories
+
+Since 1.4.0 the updater can read the releases of a **private** GitHub repository. Public
+repositories keep working exactly as before, with no token.
+
+### Configure the token
+
+The token is read from a PHP constant first, then from an environment variable, both named by the
+`token_constant` option (default `SILVER_GITHUB_TOKEN`). It is never read from the database or from
+a settings screen.
+
+```php
+// wp-config.php
+define( 'SILVER_GITHUB_TOKEN', 'the-token' );
+```
+
+Or set `SILVER_GITHUB_TOKEN` in the environment of the PHP process. If your PHP setup does not pass
+environment variables to its workers (for example PHP-FPM with `clear_env`), define the constant in
+`wp-config.php` from your secret store instead.
+
+The token needs read access to the repository's contents and releases. For a classic personal
+access token that is the `repo` scope. Never commit the token to a repository.
+
+To use another name, set the option:
+
+```php
+$config = new UpdaterConfig( $pluginFile, 'owner/private-repo', [
+    'token_constant' => 'MY_PLUGIN_GITHUB_TOKEN',
+] );
+```
+
+### How it works
+
+- The token is sent as `Authorization: Bearer` to `api.github.com` only, never to any other host.
+- A private release asset is downloaded through its API URL. GitHub answers with a redirect to a
+  signed storage URL, which the updater follows **without** the token.
+- The release must have a ZIP asset attached, as for public repositories.
+- A failed lookup is not cached, so the next check asks again.
+
+### Troubleshooting
+
+When a site stops seeing updates, the PHP error log says why. The token is never written to it.
+
+| Log message | Meaning |
+|-------------|---------|
+| `GitHub rejected the token (HTTP 401)` | The token is invalid or expired. Replace it |
+| `HTTP 403: the token has no access to the repository, or the rate limit was reached` | The token cannot read the repository, or GitHub is rate limiting it |
+| `HTTP 403: the rate limit was reached or the repository is private. Define SILVER_GITHUB_TOKEN to authenticate` | No token is configured and GitHub refused the anonymous request |
+| `HTTP 404: the release does not exist, or the token has no access to the repository` | Check the repository name, that the release exists, and the token's access |
+| `HTTP 404: not found. If the repository is private, define SILVER_GITHUB_TOKEN` | The repository is private and no token is configured |
+
+### Testing against a private repository
+
+The behaviour tests run on the WordPress Test Suite and intercept requests with the
+`pre_http_request` filter, so they never reach the network. An opt-in live test checks the real
+GitHub API against a private repository that has a release with a ZIP asset:
+
+```bash
+WPGU_LIVE_REPO=owner/private-repo WPGU_LIVE_VERSION=1.2.3 SILVER_GITHUB_TOKEN=... \
+  vendor/bin/phpunit --testsuite wordpress --group external-http
+```
 
 ## Manual Version Check
 
@@ -389,7 +453,7 @@ The updater automatically tries multiple strategies for temporary file creation:
 - PHP 8.2 or higher
 - WordPress 6.0 or higher
 - Composer for dependency management
-- Public GitHub repository with releases
+- GitHub repository with releases (public, or private with a token, see Private Repositories)
 
 ## Development
 

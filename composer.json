@@ -1,6 +1,6 @@
 {
   "name": "silverassist/wp-github-updater",
-  "description": "A reusable WordPress plugin updater that handles automatic updates from public GitHub releases",
+  "description": "A reusable WordPress plugin updater that handles automatic updates from GitHub releases, public or private",
   "type": "library",
   "keywords": [
     "wordpress",
@@ -55,7 +55,7 @@
     "test:wordpress": "phpunit --testsuite wordpress",
     "phpcs": "phpcs",
     "phpcbf": "phpcbf",
-    "phpstan": "phpstan analyse src/ --level=8",
+    "phpstan": "phpstan analyse src/ --level=8 --memory-limit=512M",
     "check": [
       "@phpcs",
       "@phpstan",

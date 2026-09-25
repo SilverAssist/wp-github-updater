@@ -11,6 +11,3 @@ parameters:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
     scanDirectories:
         - vendor/php-stubs/wordpress-stubs
-    ignoreErrors:
-        # Ignore WP_Error union type issues in some contexts
-        - '#Cannot call method get_error_message\(\) on string\|WP_Error\|false#'

@@ -3,11 +3,12 @@
 /**
  * WordPress GitHub Updater
  *
- * A reusable WordPress plugin updater that handles automatic updates from public GitHub releases.
+ * A reusable WordPress plugin updater that handles automatic updates from GitHub releases,
+ * public or private.
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.3.1
+ * @version 1.4.0
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -63,7 +64,7 @@ class Updater
     /**
      * Plugin data from header
      *
-     * @var array Plugin metadata extracted from plugin file header
+     * @var array<string, mixed> Plugin metadata extracted from plugin file header
      * @since 1.0.0
      */
     private array $pluginData;
@@ -140,13 +141,14 @@ class Updater
      */
     public function checkForUpdate(mixed $transient)
     {
-        if (empty($transient->checked)) {
+        if (!is_object($transient) || empty($transient->checked)) {
             return $transient;
         }
 
+        /** @var \stdClass $transient */
         $latestVersion = $this->getLatestVersion();
 
-        if ($this->isUpdateAvailable()) {
+        if ($latestVersion !== false && $this->isUpdateAvailable()) {
             $transient->response[$this->pluginSlug] = (object) [
                 "slug" => $this->pluginBasename,
                 "plugin" => $this->pluginSlug,
@@ -168,16 +170,16 @@ class Updater
      * Provides detailed plugin information when WordPress requests it,
      * including version, changelog, and download information.
      *
-     * @param false|object|array $result The result object or array.
-     * @param string             $action The type of information being requested.
-     * @param object             $args   Plugin API arguments.
-     * @return false|object|array Plugin information object or original result
+     * @param false|object|array<string, mixed> $result The result object or array.
+     * @param string                            $action The type of information being requested.
+     * @param object                            $args   Plugin API arguments.
+     * @return false|object|array<string, mixed> Plugin information object or original result
      *
      * @since 1.0.0
      */
     public function pluginInfo(false|object|array $result, string $action, object $args): false|object|array
     {
-        if ($action !== "plugin_information" || $args->slug !== $this->pluginBasename) {
+        if ($action !== "plugin_information" || !isset($args->slug) || $args->slug !== $this->pluginBasename) {
             return $result;
         }
 
@@ -199,7 +201,7 @@ class Updater
                 "description" => $this->config->pluginDescription,
                 "changelog" => $changelog,
             ],
-            "download_link" => $this->getDownloadUrl($latestVersion),
+            "download_link" => $latestVersion !== false ? $this->getDownloadUrl($latestVersion) : "",
             "last_updated" => $this->getLastUpdated(),
         ];
     }
@@ -228,7 +230,7 @@ class Updater
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
-            error_log("WP GitHub Updater: Failed to fetch latest version for {$this->config->githubRepo}");
+            $this->logRequestFailure("fetching the latest release", $response);
             return false;
         }
 
@@ -292,6 +294,7 @@ class Updater
         ]);
 
         if (\is_wp_error($response) || 200 !== \wp_remote_retrieve_response_code($response)) {
+            $this->logRequestFailure("looking up the release assets for v{$version}", $response);
             return null;
         }
 
@@ -304,9 +307,17 @@ class Updater
 
         // Look for the ZIP asset
         foreach ($data["assets"] as $asset) {
-            if (str_ends_with($asset["name"], ".zip")) {
-                return $asset["browser_download_url"];
+            if (!str_ends_with($asset["name"], ".zip")) {
+                continue;
             }
+
+            // A private repository only serves the asset through the API URL (with the token).
+            // The browser download URL cannot be authenticated, so keep it for anonymous access.
+            if ($this->getToken() !== null && !empty($asset["url"])) {
+                return $asset["url"];
+            }
+
+            return $asset["browser_download_url"];
         }
 
         return null;
@@ -395,8 +406,8 @@ class Updater
     /**
      * Clear version cache after update
      *
-     * @param WP_Upgrader $upgrader WP_Upgrader instance.
-     * @param array       $data     Array of update data.
+     * @param WP_Upgrader          $upgrader WP_Upgrader instance.
+     * @param array<string, mixed> $data     Array of update data.
      * @return void
      */
     public function clearVersionCache(WP_Upgrader $upgrader, array $data): void
@@ -561,7 +572,7 @@ class Updater
 
     /**
      * Get plugin data from file
-     * @return array
+     * @return array<string, mixed>
      */
     private function getPluginData(): array
     {
@@ -625,7 +636,7 @@ class Updater
             "wp-github-updater-check",
             $this->getPackageAssetUrl("assets/js/check-updates.js"),
             ["jquery"],
-            "1.3.1",
+            "1.4.0",
             true
         );
 
@@ -724,6 +735,39 @@ class Updater
     }
 
     /**
+     * Replace with a regular expression, keeping the input when the pattern fails
+     *
+     * preg_replace() returns null on an engine error (for example a backtrack limit).
+     * Keeping the original text is safer than turning the whole changelog into an empty string.
+     *
+     * @param string $pattern     Regular expression.
+     * @param string $replacement Replacement text.
+     * @param string $subject     Text to search.
+     * @return string The replaced text, or the original subject on failure
+     *
+     * @since 1.4.0
+     */
+    private function regexReplace(string $pattern, string $replacement, string $subject): string
+    {
+        return preg_replace($pattern, $replacement, $subject) ?? $subject;
+    }
+
+    /**
+     * Replace with a regular expression callback, keeping the input when the pattern fails
+     *
+     * @param string                                      $pattern  Regular expression.
+     * @param callable(array<int|string, string>): string $callback Callback that builds each replacement.
+     * @param string                                      $subject  Text to search.
+     * @return string The replaced text, or the original subject on failure
+     *
+     * @since 1.4.0
+     */
+    private function regexReplaceCallback(string $pattern, callable $callback, string $subject): string
+    {
+        return preg_replace_callback($pattern, $callback, $subject) ?? $subject;
+    }
+
+    /**
      * Parse Markdown to HTML
      *
      * Converts basic Markdown syntax to HTML for better changelog display.
@@ -740,37 +784,37 @@ class Updater
         $html = $markdown;
 
         // Headers (# -> h2, ## -> h3, ### -> h4, #### -> h5)
-        $html = preg_replace("/^#### (.*$)/m", "<h5>$1</h5>", $html);
-        $html = preg_replace("/^### (.*$)/m", "<h4>$1</h4>", $html);
-        $html = preg_replace("/^## (.*$)/m", "<h3>$1</h3>", $html);
-        $html = preg_replace("/^# (.*$)/m", "<h2>$1</h2>", $html);
+        $html = $this->regexReplace("/^#### (.*$)/m", "<h5>$1</h5>", $html);
+        $html = $this->regexReplace("/^### (.*$)/m", "<h4>$1</h4>", $html);
+        $html = $this->regexReplace("/^## (.*$)/m", "<h3>$1</h3>", $html);
+        $html = $this->regexReplace("/^# (.*$)/m", "<h2>$1</h2>", $html);
 
         // Bold text (**text** -> <strong>text</strong>)
-        $html = preg_replace("/\*\*(.*?)\*\*/", "<strong>$1</strong>", $html);
+        $html = $this->regexReplace("/\*\*(.*?)\*\*/", "<strong>$1</strong>", $html);
 
         // Italic text (*text* -> <em>text</em>)
-        $html = preg_replace("/(?<!\*)\*([^*]+)\*(?!\*)/", "<em>$1</em>", $html);
+        $html = $this->regexReplace("/(?<!\*)\*([^*]+)\*(?!\*)/", "<em>$1</em>", $html);
 
         // Code blocks (`code` -> <code>code</code>)
-        $html = preg_replace("/`([^`]+)`/", "<code>$1</code>", $html);
+        $html = $this->regexReplace("/`([^`]+)`/", "<code>$1</code>", $html);
 
         // Unordered lists (- item -> <ul><li>item</li></ul>)
-        $html = preg_replace_callback("/(?:^- (.+)(?:\n|$))+/m", function ($matches) {
-            $items = preg_split("/\n- /", trim($matches[0]));
+        $html = $this->regexReplaceCallback("/(?:^- (.+)(?:\n|$))+/m", function ($matches) {
+            $items = preg_split("/\n- /", trim($matches[0])) ?: [trim($matches[0])];
             $items[0] = ltrim($items[0], "- ");
             $liItems = array_map(fn($item) => "<li>" . trim($item) . "</li>", array_filter($items));
             return "<ul>" . implode("", $liItems) . "</ul>";
         }, $html);
 
         // Links ([text](url) -> <a href="url">text</a>)
-        $html = preg_replace("/\[([^\]]+)\]\(([^)]+)\)/", "<a href=\"$2\">$1</a>", $html);
+        $html = $this->regexReplace("/\[([^\]]+)\]\(([^)]+)\)/", "<a href=\"$2\">$1</a>", $html);
 
         // Line breaks (double newline -> <br>)
-        $html = preg_replace("/\n\s*\n/", "<br>", $html);
-        $html = preg_replace("/\n/", "<br>", $html);
+        $html = $this->regexReplace("/\n\s*\n/", "<br>", $html);
+        $html = $this->regexReplace("/\n/", "<br>", $html);
 
         // Clean up extra line breaks and spaces
-        $html = preg_replace("/(<br>\s*){3,}/", "<br>", $html);
+        $html = $this->regexReplace("/(<br>\s*){3,}/", "<br>", $html);
         $html = trim($html);
 
         return $html;
@@ -787,10 +831,10 @@ class Updater
      * - string: Path to an already-downloaded file for WordPress to use
      * - NEVER return true or any other type!
      *
-     * @param boolean|WP_Error $result     The result from previous filters.
-     * @param string           $package    The package URL being downloaded.
-     * @param object           $upgrader   The WP_Upgrader instance.
-     * @param array            $hook_extra Extra hook data.
+     * @param boolean|WP_Error     $result     The result from previous filters.
+     * @param string               $package    The package URL being downloaded.
+     * @param object               $upgrader   The WP_Upgrader instance.
+     * @param array<string, mixed> $hook_extra Extra hook data.
      * @return string|WP_Error|false Path to downloaded file, WP_Error on failure, or false to continue
      *
      * @since 1.1.0
@@ -831,45 +875,10 @@ class Updater
             return false; // Not our plugin, let WordPress handle it
         }
 
-        // Download the package with optimized settings
-        $args = [
-            "timeout" => 300, // 5 minutes for large files
-            "headers" => $this->getDownloadHeaders(),
-            "sslverify" => true,
-            "stream" => false,
-            "filename" => null,
-        ];
-
-        $response = \wp_remote_get($package, $args);
-
-        if (\is_wp_error($response)) {
-            return new WP_Error(
-                "download_failed",
-                sprintf(
-                    $this->config->__("Failed to download package: %s"),
-                    $response->get_error_message()
-                )
-            );
-        }
-
-        $response_code = \wp_remote_retrieve_response_code($response);
-        if (200 !== $response_code) {
-            return new WP_Error(
-                "http_error",
-                sprintf(
-                    $this->config->__("Package download failed with HTTP code %d"),
-                    $response_code
-                )
-            );
-        }
-
-        // Get the response body
-        $body = \wp_remote_retrieve_body($response);
-        if (empty($body)) {
-            return new WP_Error(
-                "empty_response",
-                $this->config->__("Downloaded package is empty")
-            );
+        // Download the package (two steps for a private repository, see fetchPackage())
+        $body = $this->fetchPackage($package);
+        if (\is_wp_error($body)) {
+            return $body;
         }
 
         // Create temporary file with our multi-tier fallback system
@@ -951,7 +960,11 @@ class Updater
      */
     private function createSecureTempFile(string $package): string|WP_Error
     {
-        $filename = basename(parse_url($package, PHP_URL_PATH)) ?: "github-package.zip";
+        $path = parse_url($package, PHP_URL_PATH);
+        $filename = is_string($path) ? basename($path) : "";
+        if ($filename === "") {
+            $filename = "github-package.zip";
+        }
 
         // Strategy 1: Use custom temporary directory if specified
         if (!empty($this->config->customTempDir)) {
@@ -1021,10 +1034,60 @@ class Updater
     }
 
     /**
+     * Get the GitHub token, if one is configured
+     *
+     * @return string|null The token, or null when requests should stay anonymous
+     *
+     * @since 1.4.0
+     */
+    private function getToken(): ?string
+    {
+        return $this->config->getGithubToken();
+    }
+
+    /**
+     * Check whether a URL points at the GitHub API
+     *
+     * @param string $url URL to check.
+     * @return boolean True for an https URL on api.github.com
+     *
+     * @since 1.4.0
+     */
+    private function isGithubApiUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+
+        return is_array($parts)
+            && ($parts["scheme"] ?? "") === "https"
+            && strtolower($parts["host"] ?? "") === "api.github.com";
+    }
+
+    /**
+     * Get the Authorization header for a request, when it should carry one
+     *
+     * The token is only ever sent to api.github.com. It is never attached to any other host,
+     * including the signed storage URL GitHub redirects a private asset download to.
+     *
+     * @param string $url URL the request is going to.
+     * @return array<string, string> The header, or an empty array
+     *
+     * @since 1.4.0
+     */
+    private function getAuthorizationHeader(string $url): array
+    {
+        $token = $this->getToken();
+        if ($token === null || !$this->isGithubApiUrl($url)) {
+            return [];
+        }
+
+        return ["Authorization" => "Bearer {$token}"];
+    }
+
+    /**
      * Get headers for GitHub API requests
      *
      * Returns standard headers for GitHub API communication including
-     * User-Agent and Accept headers for optimal API interaction.
+     * User-Agent and Accept headers, plus the token when one is configured.
      *
      * @return array<string, string> Array of HTTP headers
      *
@@ -1032,28 +1095,181 @@ class Updater
      */
     private function getApiHeaders(): array
     {
-        return [
+        return array_merge([
             "User-Agent" => "WP-GitHub-Updater/{$this->currentVersion}",
             "Accept" => "application/vnd.github.v3+json",
-        ];
+        ], $this->getAuthorizationHeader("https://api.github.com/"));
     }
 
     /**
      * Get headers for GitHub asset downloads
      *
-     * Returns headers optimized for downloading GitHub release assets
-     * including compression support and extended timeouts.
+     * Returns headers optimized for downloading GitHub release assets, plus the token when the
+     * URL is on the GitHub API and one is configured.
      *
+     * @param string $url URL the download is going to.
      * @return array<string, string> Array of HTTP headers
      *
      * @since 1.1.0
      */
-    private function getDownloadHeaders(): array
+    private function getDownloadHeaders(string $url): array
     {
-        return [
+        return array_merge([
             "User-Agent" => "WP-GitHub-Updater/{$this->currentVersion}",
             "Accept" => "application/octet-stream",
             "Accept-Encoding" => "gzip, deflate",
+        ], $this->getAuthorizationHeader($url));
+    }
+
+    /**
+     * Download the release package
+     *
+     * The asset URL of a private repository is on the GitHub API and needs the token, and GitHub
+     * answers it with a redirect to a signed storage URL. That redirect is followed by hand so the
+     * token is never sent to the storage host: the first request carries the token and stops at
+     * the redirect, the second one goes to the signed URL with no Authorization header.
+     *
+     * @param string $package The package URL being downloaded.
+     * @return string|WP_Error The package contents, or a WP_Error
+     *
+     * @since 1.4.0
+     */
+    private function fetchPackage(string $package): string|WP_Error
+    {
+        $authenticated = $this->getAuthorizationHeader($package) !== [];
+
+        $args = [
+            "timeout" => 300, // 5 minutes for large files
+            "headers" => $this->getDownloadHeaders($package),
+            "sslverify" => true,
         ];
+        if ($authenticated) {
+            $args["redirection"] = 0;
+        }
+
+        $response = \wp_remote_get($package, $args);
+
+        if ($authenticated && !\is_wp_error($response)) {
+            $code = (int) \wp_remote_retrieve_response_code($response);
+            if (in_array($code, [301, 302, 303, 307, 308], true)) {
+                $location = \wp_remote_retrieve_header($response, "location");
+                $location = is_string($location) ? $location : "";
+
+                if (!str_starts_with($location, "https://")) {
+                    return new WP_Error(
+                        "invalid_redirect",
+                        $this->config->__("GitHub redirected the download to an address that is not https")
+                    );
+                }
+
+                $response = \wp_remote_get($location, [
+                    "timeout" => 300,
+                    "headers" => $this->getDownloadHeaders($location),
+                    "sslverify" => true,
+                ]);
+            }
+        }
+
+        if (\is_wp_error($response)) {
+            $this->logRequestFailure("downloading the package", $response);
+
+            return new WP_Error(
+                "download_failed",
+                sprintf(
+                    $this->config->__("Failed to download package: %s"),
+                    $response->get_error_message()
+                )
+            );
+        }
+
+        $code = (int) \wp_remote_retrieve_response_code($response);
+        if (200 !== $code) {
+            $this->logRequestFailure("downloading the package", $response);
+
+            return new WP_Error(
+                "http_error",
+                trim(sprintf(
+                    $this->config->__("Package download failed with HTTP code %d"),
+                    $code
+                ) . " " . $this->getFailureHint($code, $authenticated))
+            );
+        }
+
+        $body = \wp_remote_retrieve_body($response);
+        if (empty($body)) {
+            return new WP_Error(
+                "empty_response",
+                $this->config->__("Downloaded package is empty")
+            );
+        }
+
+        return $body;
+    }
+
+    /**
+     * Explain a failed request in words an administrator can act on
+     *
+     * @param integer $code          HTTP status code.
+     * @param boolean $authenticated Whether the request carried the token.
+     * @return string A short hint, or an empty string when there is nothing specific to say
+     *
+     * @since 1.4.0
+     */
+    private function getFailureHint(int $code, bool $authenticated): string
+    {
+        $name = $this->config->tokenConstant;
+
+        return match (true) {
+            $code === 401 => sprintf($this->config->__("GitHub rejected the token. Check the value of %s."), $name),
+            $authenticated && in_array($code, [403, 404], true) =>
+                $this->config->__("The token may not have access to this repository."),
+            $code === 404 => sprintf(
+                $this->config->__("If the repository is private, define %s in wp-config.php or the environment."),
+                $name
+            ),
+            default => "",
+        };
+    }
+
+    /**
+     * Write a failed GitHub request to the PHP error log
+     *
+     * The message names the likely cause (a rejected token, a repository the token cannot read,
+     * a private repository with no token) so a site that silently stops updating can be
+     * diagnosed from its log. The token itself is never written.
+     *
+     * @param string                        $action   What was being attempted, for example "downloading".
+     * @param array<string, mixed>|WP_Error $response The failed response.
+     * @return void
+     *
+     * @since 1.4.0
+     */
+    private function logRequestFailure(string $action, array|WP_Error $response): void
+    {
+        $prefix = "WP GitHub Updater: Failed {$action} for {$this->config->githubRepo}";
+
+        if (\is_wp_error($response)) {
+            error_log("{$prefix}: " . $response->get_error_message());
+            return;
+        }
+
+        $code = (int) \wp_remote_retrieve_response_code($response);
+        $hasToken = $this->getToken() !== null;
+        $name = $this->config->tokenConstant;
+
+        $detail = match (true) {
+            $code === 401 => "GitHub rejected the token (HTTP 401). Check the value of {$name}.",
+            $code === 403 && $hasToken => "HTTP 403: the token has no access to the repository, "
+                . "or the rate limit was reached.",
+            $code === 403 => "HTTP 403: the rate limit was reached or the repository is private. "
+                . "Define {$name} to authenticate.",
+            $code === 404 && $hasToken => "HTTP 404: the release does not exist, "
+                . "or the token has no access to the repository.",
+            $code === 404 => "HTTP 404: not found. If the repository is private, "
+                . "define {$name} in wp-config.php or the environment.",
+            default => "HTTP {$code}",
+        };
+
+        error_log("{$prefix}: {$detail}");
     }
 }
