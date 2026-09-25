@@ -3,11 +3,12 @@
 /**
  * WordPress GitHub Updater
  *
- * A reusable WordPress plugin updater that handles automatic updates from public GitHub releases.
+ * A reusable WordPress plugin updater that handles automatic updates from GitHub releases,
+ * public or private.
  *
  * @package SilverAssist\WpGithubUpdater
  * @author Silver Assist
- * @version 1.3.1
+ * @version 1.4.0
  * @license PolyForm-Noncommercial-1.0.0
  */
 
@@ -139,6 +140,17 @@ class UpdaterConfig
     public ?string $customTempDir;
 
     /**
+     * Name of the constant or environment variable that holds the GitHub token
+     *
+     * The token is only ever read from a PHP constant or an environment variable, never from
+     * the database or a settings screen. Private repositories need it; public ones work without.
+     *
+     * @var string Constant or environment variable name
+     * @since 1.4.0
+     */
+    public string $tokenConstant;
+
+    /**
      * Create updater configuration
      *
      * Initializes the updater configuration with plugin metadata and settings.
@@ -171,6 +183,7 @@ class UpdaterConfig
         $this->ajaxNonce = $options["ajax_nonce"] ?? "plugin_version_check";
         $this->textDomain = $options["text_domain"] ?? "wp-github-updater";
         $this->customTempDir = $options["custom_temp_dir"] ?? null;
+        $this->tokenConstant = $options["token_constant"] ?? "SILVER_GITHUB_TOKEN";
     }
 
     /**
@@ -192,6 +205,34 @@ class UpdaterConfig
 
         // Fallback for when WordPress functions aren't available
         return [];
+    }
+
+    /**
+     * Get the GitHub token used to read releases, if one is configured
+     *
+     * Looks for a PHP constant first (for example defined in wp-config.php), then for an
+     * environment variable, both named by the `token_constant` option. Returns null when
+     * neither is set or the value is empty, in which case requests stay anonymous.
+     *
+     * @return string|null The token, or null when none is configured
+     *
+     * @since 1.4.0
+     */
+    public function getGithubToken(): ?string
+    {
+        $name = $this->tokenConstant;
+        if ($name === "") {
+            return null;
+        }
+
+        $value = \defined($name) ? \constant($name) : \getenv($name);
+        if (!\is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === "" ? null : $value;
     }
 
     /**
