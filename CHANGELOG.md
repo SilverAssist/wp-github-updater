@@ -4,6 +4,7 @@
 
 ### Changed
 
+- The Dependabot auto-merge workflow is now a thin caller of the shared `SilverAssist/workflows/dependabot-auto-merge@v1` action. The cooldown and approval logic moved there, and the action also refuses pull requests carrying commits that are not verified Dependabot commits.
 - The `vcs` repositories in `composer.json` (development dependencies) and in the README snippet now carry `"no-api": true`, so Composer reads tags with git instead of the GitHub API. A lockless install cost about 100 API requests of the token's hourly quota, enough to exhaust it in a busy CI.
 
 ### Fixed
