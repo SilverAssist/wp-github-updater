@@ -73,8 +73,20 @@ elif [[ $WP_VERSION =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
 		WP_TESTS_TAG="tags/$WP_VERSION"
 	fi
 
-elif [[ $WP_VERSION == 'nightly' || $WP_VERSION == 'trunk' || $WP_VERSION == 'latest' ]]; then
+elif [[ $WP_VERSION == 'nightly' || $WP_VERSION == 'trunk' ]]; then
 	WP_TESTS_TAG="trunk"
+
+elif [[ $WP_VERSION == 'latest' ]]; then
+	# The test library must match the installed core. Trunk's library references
+	# classes the released core does not have yet, such as WP_Secrets_Store.
+	# http serves a single offer, whereas https serves multiple; we only want one.
+	download http://api.wordpress.org/core/version-check/1.7/ /tmp/wp-latest.json
+	LATEST_VERSION=$(grep -o '"version":"[^"]*' /tmp/wp-latest.json | head -1 | sed 's/"version":"//')
+	if [[ -z "$LATEST_VERSION" ]]; then
+		echo "Latest WordPress version could not be found"
+		exit 1
+	fi
+	WP_TESTS_TAG="tags/$LATEST_VERSION"
 
 else
 	echo "Invalid version $WP_VERSION"
