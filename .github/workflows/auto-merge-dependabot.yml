@@ -1,42 +1,35 @@
+# Calls the shared action in SilverAssist/workflows (dependabot-auto-merge@v1).
+#
+# The logic lives in SilverAssist/workflows. This file only decides when it
+# runs and what the token may do. The job-level `if:` keeps a write-scoped
+# token away from other contributors' pull requests; the action then refuses
+# anything that is not a Dependabot pull request event, and anything whose
+# head moved or carries a commit that is not a verified Dependabot commit.
+#
+# Requirements in this repo (the SilverAssist/workflows README explains why):
+# - "Allow auto-merge" on.
+# - "Allow GitHub Actions to create and approve pull requests" on.
+# - Required status checks on the default branch, in the main-protection ruleset.
+# - Stale approvals dismissed on push in the branch ruleset.
 name: Auto-merge Dependabot PRs
 
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+on: pull_request
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
+
+# A newer push to the same pull request supersedes the run for the older one.
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  auto-merge-dependabot:
+  dependabot-auto-merge:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && success()
-
+    if: github.actor == 'dependabot[bot]'
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     steps:
-      - name: Check if Dependabot PR
-        id: check-actor
-        run: |
-          if [ "${{ github.actor }}" = "dependabot[bot]" ]; then
-            echo "is_dependabot=true" >> $GITHUB_OUTPUT
-            echo "✅ This is a Dependabot PR, proceeding with auto-merge checks."
-          else
-            echo "is_dependabot=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ Not a Dependabot PR, skipping auto-merge steps."
-          fi
-
-      - name: Dependabot metadata
-        if: steps.check-actor.outputs.is_dependabot == 'true'
-        id: metadata
-        uses: dependabot/fetch-metadata@v3
-
-      - name: Auto-merge PR
-        if: |
-          steps.check-actor.outputs.is_dependabot == 'true' && (
-            steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
-            steps.metadata.outputs.update-type == 'version-update:semver-minor'
-          )
-        run: gh pr merge --auto --squash "$PR_URL"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
+      - uses: SilverAssist/workflows/dependabot-auto-merge@v1
