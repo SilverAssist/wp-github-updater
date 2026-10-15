@@ -6,6 +6,10 @@
 
 - The `vcs` repositories in `composer.json` (development dependencies) and in the README snippet now carry `"no-api": true`, so Composer reads tags with git instead of the GitHub API. A lockless install cost about 100 API requests of the token's hourly quota, enough to exhaust it in a busy CI.
 
+### Fixed
+
+- `scripts/install-wp-tests.sh` resolves `latest` to the current release and installs the test library from that tag, not from trunk. Trunk's library references classes the released core does not have yet (`WP_Secrets_Store`), so every WordPress test-suite job failed in the bootstrap.
+
 ## [1.4.0] - 2026-09-25
 
 ### Added
